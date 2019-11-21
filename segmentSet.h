@@ -186,6 +186,9 @@ class SegmentSet {
 		getsegNumMaxSegLength(void),
 		getSegProperty(byte segNum, byte secNum, byte prop);
 		
+	  segmentSection* 
+		getSegPtr(byte segNum);
+		
 	  boolean
 		checkSegFreq(byte freq, byte num, boolean startAtFirst);
 };

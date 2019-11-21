@@ -51,17 +51,17 @@ uint16_t  SegmentSet::getTotalNumSec(byte segNum){
 
 //returns the pointer to the specified segment
 uint16_t  SegmentSet::getSectionPtr(byte segNum){
-	return getSegProperty(segNum, 0, 2); //secNum = 0, it's not needed for the call
+	getSegPtr(segNum);
 }
 
 //returns the start pixel of the specified section in the specified segment (secNum is the index of the section within the segment array)
 uint16_t  SegmentSet::getSecStartPixel(byte segNum, byte secNum){
-	return getSegProperty(segNum, secNum, 3);
+	return getSegProperty(segNum, secNum, 2);
 }
 
 //returns the length of the specified section in the specified segment	
 uint16_t  SegmentSet::getSecLength(byte segNum, byte secNum){
-	return getSegProperty(segNum, secNum, 4);
+	return getSegProperty(segNum, secNum, 3);
 }
 
 //returns the direction of the specified segment
@@ -75,9 +75,8 @@ boolean SegmentSet::getSegDirection(byte segNum){
 //prop indcates which property to get:
 	//0: the specified segment's totalLength (segNum is the segment's index in the segments array passed to the constructor)
 	//1: the specified segment's number of sections
-	//2: the pointer to the specified segment
-	//3: the start pixel of the specified section in the specified segment (secNum is the index of the section within the segment array)
-	//4: the length of the specified section in the specified segment
+	//2: the start pixel of the specified section in the specified segment (secNum is the index of the section within the segment array)
+	//3: the length of the specified section in the specified segment
 uint16_t  SegmentSet::getSegProperty(byte segNum, byte secNum, byte prop){
 	Segment *ptr = *(segArr + segNum); //the pointer to the segment at index segNum
 	switch(prop){
@@ -88,16 +87,20 @@ uint16_t  SegmentSet::getSegProperty(byte segNum, byte secNum, byte prop){
 			return ptr->numSec;
 			break;
 		case 2 :
-			return ptr->secPtr;
-			break;
-		case 3 :
 			return ptr->getSecStartPixel(secNum);
 			break;
-		case 4 :
+		case 3 :
 			return ptr->getSecLength(secNum);
 			break;	
 	}
 }
+
+//returns the pointer to the specified segment
+segmentSection*  SegmentSet::getSegPtr(byte segNum){
+	Segment *ptr = *(segArr + segNum); //the pointer to the segment at index segNum
+			return ptr->secPtr;
+}
+
 
 //sets the direction of the specified segment to the specified direction
 void SegmentSet::setSegDirection(byte segNum, boolean direction){

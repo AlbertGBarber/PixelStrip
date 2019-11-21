@@ -21,6 +21,8 @@
     #define SIZE(x) (sizeof((x)) / sizeof((x)[0]))
 #endif
 
+#define min(a,b) ((a)<(b)?(a):(b))
+
 #define stopPatternCheck() ({ \
 	if( (pixelStripStopPattern) ){ \
 		(pixelStripStopPattern) = false; \
@@ -136,13 +138,13 @@ class PixelStrip : public Adafruit_NeoPixel {
 		rainbowPatternCycle( byte pattern[][2], uint8_t patternLength, uint8_t shiftFactor,  uint8_t wait, uint8_t steps),
 		patternSweepSetRand( uint8_t numRandLeds, uint32_t pallet[],  uint8_t palletLength, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int numCycles),
 		patternSweepRand( uint8_t numRandLeds, int32_t preferedColor, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int numCycles),
-		patternSweep( uint16_t pattern[][3], uint8_t patternLength,  int32_t pallet[], int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int numCycles),
+		patternSweep( uint16_t pattern[][3], uint8_t patternLength,  uint32_t pallet[], int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int numCycles),
 		patternSweepRainbowRand( uint8_t numRandLeds, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, int wait, int numCycles),
 		patternSweepRainbow( uint16_t pattern[][2], uint8_t patternLength, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, int wait, int numCycles),
 		patternSweepRepeatRand(byte numColors, uint32_t preferedColor, int32_t BgColor, int trails, byte trailLength, boolean scanner, boolean direction, byte eyeSize, byte spacing, uint8_t colorMode, int wait, int numCycles ),
 		patternSweepRepeat(byte colorPattern[], byte colorPatternLength, uint32_t pallet[], int32_t BgColor, int trails, byte trailLength, boolean scanner, boolean direction, byte eyeSize, byte spacing, uint8_t colorMode, int wait, int numCycles ),
-		shooterFixedLength( uint16_t sectionLength, int32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, int8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
-		shooter( uint16_t sections[][2], byte numSections, int32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, int8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
+		shooterFixedLength( uint16_t sectionLength, uint32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, int8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
+		shooter( uint16_t sections[][2], byte numSections, uint32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, int8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
 		fireworksRand( uint8_t numRandLeds, int32_t preferedColor, int32_t BgColor, uint8_t dimFactor, uint8_t colorMode, int wait, int numCycles),
 		fireworksSet( uint8_t numRandLeds, uint8_t dimFactor, uint32_t pallet[],  uint8_t palletLength, int32_t BgColor, uint8_t colorMode, int wait, int numCycles),
 		fillSegBgGradientRGB(SegmentSet segmentSet),
@@ -153,14 +155,14 @@ class PixelStrip : public Adafruit_NeoPixel {
 		segGradientCycle2(SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], byte palletLength, byte gradSteps, uint16_t numCycles, boolean inToOut, int wait),
 		segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], byte palletLength, byte gradSteps, uint16_t numCycles, boolean inToOut, int wait),
 		fillSegColor(SegmentSet segmentSet, byte segNum, uint32_t color),
-		shooterSeg( SegmentSet segmentSet, int32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, uint8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
+		shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, uint8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles),
 		waves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint16_t numCycles, boolean inToOut, uint16_t wait, uint8_t steps),
 		randomWaves( SegmentSet segmentSet, byte numColors, byte waveThickness, byte spacing, byte numCycles, boolean inToOut, byte wait, byte steps),
 		simpleWaves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte waveThickness, byte spacing, uint32_t BgColor, byte numCycles, boolean inToOut, byte wait, byte steps),
 		singleWave( SegmentSet segmentSet, uint32_t waveColor, uint32_t BgColor, uint8_t waveThickness, uint8_t numCycles, boolean inToOut, uint8_t wait, uint8_t steps),
 		rainbowWave( SegmentSet segmentSet, uint8_t numCycles, boolean inToOut, uint8_t wait, uint8_t steps),
 		rainbowSingleWave( SegmentSet segmentSet, uint8_t waveThickness, uint8_t shiftFactor, uint8_t mode, uint8_t wait, uint8_t steps),
-		colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], int32_t BgColor, uint8_t colorMode, int numCycles, int wait ),
+		colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], int32_t BgColor, uint8_t colorMode, boolean repeat, int numCycles, int wait ),
 		drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[]),
 		drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[]),
 		colorSpinSimple( SegmentSet segmentSet, byte numColors, int32_t prefColor, int32_t BgColor, uint8_t sweepLength, int numSweeps, byte sweepSpacing, byte patternMode, byte colorMode, int numCycles, int wait ),
@@ -185,7 +187,7 @@ class PixelStrip : public Adafruit_NeoPixel {
 		
 	
 	uint16_t 
-		getSegmentPixel(SegmentSet segmentSet, byte segNum, byte num),
+		getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t num),
 		bgPalletStripSize;
 		
 	uint32_t
@@ -205,9 +207,10 @@ class PixelStrip : public Adafruit_NeoPixel {
 	//with the RGB pallet you want. You must do this each time you change the background pallet
 	//this will also set bgPalletStripSize which is the length of the current pallet
 	//After doing this you can call the gradient functions on the new pallet
-	RGB *bgPalletStrip, 
+	RGB  
+		*bgPalletStrip,
 		makeRGBFromColor(uint32_t color);
-		
+
 	private:
 		void
 			incrementLedLocation( uint16_t localPattern[][3], uint8_t patternLength, uint8_t eyeSize, boolean scanner),
@@ -218,8 +221,7 @@ class PixelStrip : public Adafruit_NeoPixel {
 		const uint16_t
 			numLEDs;       // Number of RGB LEDs in strip
 		const uint8_t
-			type;          // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
-		uint8_t
+			type,             // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
 			rByteIndex,       // Index of red byte within each 3-byte pixel
 			gByteIndex,       // Index of green byte
 			bByteIndex;       // Index of blue byte
