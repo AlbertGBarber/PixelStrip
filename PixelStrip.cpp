@@ -2012,9 +2012,10 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 	int16_t shooterLocs[numSections][maxNumShooters]; //locations of shooters
 	int8_t directions[numSections]; //the step rate for each section, ie -1 or 1 determined by the direction variable and alternating
 	uint8_t colors[numSections][maxNumShooters]; //holds a color pallet color index for each of the sections
-	boolean spawnOk[numSections]; //if true, then the section is not at capacity for shooters
+	//boolean spawnOk[numSections]; //if true, then the section is not at capacity for shooters
 	boolean shooterActive[numSections][maxNumShooters]; //records if a shooter is active in a section
 	int8_t directionArray[2] = {0,0}; //used for patternSweepGetTrailLed();
+	boolean spawnOkTest = true; //if true, then a shooter and its trail are not within the spawn zone
 	
 	int16_t ledLocation, trailLedLocation; //location of the front of the current shooter, location of trail leds
 	int16_t sectionEnd, sectionStart; //end point of a given section, the start point of a given section, both are int16_t's b/c they can be subtracted from
@@ -2048,7 +2049,7 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 	//set all spawns to true, and activeShooters to false
 	//also setup direction array, if we're alternating flip the direction for each section
 	for(int i = 0; i < numSections; i++){
-		spawnOk[i] = true;
+		//spawnOk[i] = true;
 		for(int j = 0; j < maxNumShooters; j++){
 			shooterActive[i][j] = false;
 		}
@@ -2089,13 +2090,26 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 			sectionEnd = sections[i][0] + sections[i][1] - 1;
 			sectionStart = sections[i][0];
 			for(int j = 0; j < maxNumShooters; j++){
-				if( spawnOk[i] && !shooterActive[i][j] ){
+				
+				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can 
+			    //spawn a new shooter
+				spawnOkTest = true;
+				for(int k = 0; k < maxNumShooters; k++){
+					if(shooterActive[i][k]){
+						ledLocation = shooterLocs[i][k];
+						if( ( ledLocation >= (sectionEnd - trailLength) ) || ( ledLocation <= (sectionStart + trailLength) ) ){
+							spawnOkTest = false;
+						}
+					}
+				}
+				
+				if( spawnOkTest && !shooterActive[i][j] ){
 					//try to spawn shooter
 					chance = random(100);
 					//if we spawn a shooter, stop more from spawing (prevents overlapping),
 					//pick a color, and set the shooter's start point, and set it to active
 					if(chance <= spawnChance){
-						spawnOk[i] = false;
+						//spawnOk[i] = false;
 						shooterActive[i][j] = true;
 						colors[i][j] = random(palletLength);
 						//if we're going forward, start the shooter at the section's first pixel
@@ -2106,17 +2120,10 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 							shooterLocs[i][j] = sectionEnd;
 						}
 					}
-				} else {
+			    //if the current shooter is active, incrment it and draw trails
+				} else if(shooterActive[i][j]) { 
 					//we're running a pixel
 					ledLocation = shooterLocs[i][j];
-					
-					//if the shooter's trail has passed the end/start of the section (depending on direction), then we can 
-					//spawn a new shooter
-					if(!spawnOk[i]){ //a quick check to prevent wasting time setting spawnOK every cycle
-						if( ( ledLocation <= (sectionEnd - trailLength) ) && ( ledLocation >= (sectionStart + trailLength) ) ){
-							spawnOk[i] =  true;
-						}
-					}
 					
 					//if we're in streamer mode, we don't turn off any pixels, new ones just cancel old out
 					if(trails < 3){
@@ -2657,9 +2664,10 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	int16_t shooterLocs[numSegs][maxNumShooters]; //locations of shooters
 	int8_t directions[numSegs]; //the step rate for each section, ie -1 or 1 determined by the direction variable and alternating
 	uint8_t colors[numSegs][maxNumShooters]; //holds a color pallet color index for each of the sections
-	boolean spawnOk[numSegs]; //if true, then the section is not at capacity for shooters
+	//boolean spawnOk[numSegs]; //if true, then the section is not at capacity for shooters
 	boolean shooterActive[numSegs][maxNumShooters]; //records if a shooter is active in a section
 	int8_t directionArray[2] = {0,0}; //used for patternSweepGetTrailLed();
+	boolean spawnOkTest = true; //if true, then a shooter and its trail are not within the spawn zone
 	
 	int16_t ledLocation, trailLedLocation; //location of the front of the current shooter, location of trail leds
 	int16_t sectionEnd, sectionStart; //end point of a given section, the start point of a given section, both are int16_t's b/c they can be subtracted from
@@ -2671,6 +2679,8 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	int16_t modAmmount;
 	
 	uint8_t chance; //stores random roll for spawning 
+
+	ledLocation = 0;
 	
 	//used for generating a random pallet, we don't want to modify the passed in one
 	//as a rule if color mode is 4 we generate a random pallet of length palletLength
@@ -2694,7 +2704,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	//set all spawns to true, and activeShooters to false
 	//also setup direction array, if we're alternating flip the direction for each section
 	for(int i = 0; i < numSegs; i++){
-		spawnOk[i] = true;
+		//spawnOk[i] = true;
 		for(int j = 0; j < maxNumShooters; j++){
 			shooterActive[i][j] = false;
 		}
@@ -2736,13 +2746,27 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			sectionStart = 0;
 			modAmmount = segmentSet.getTotalSegLength(i) + trailLength + 1;
 			for(int j = 0; j < maxNumShooters; j++){
-				if( spawnOk[i] && !shooterActive[i][j] ){
+				
+				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can 
+			    //spawn a new shooter
+				spawnOkTest = true;
+				for(int k = 0; k < maxNumShooters; k++){
+					if(shooterActive[i][k]){
+						ledLocation = shooterLocs[i][k];
+						if( ( ledLocation >= (sectionEnd - trailLength) ) || ( ledLocation <= (sectionStart + trailLength) ) ){
+							spawnOkTest = false;
+						}
+					}
+				}
+				
+				//if no trails are in the spawn area, and the shooter isn't active, try to spawn a new one
+				if( spawnOkTest && !shooterActive[i][j] ){
 					//try to spawn shooter
 					chance = random(100);
 					//if we spawn a shooter, stop more from spawing (prevents overlapping),
 					//pick a color, and set the shooter's start point, and set it to active
 					if(chance <= spawnChance){
-						spawnOk[i] = false;
+						//spawnOk[i] = false;
 						shooterActive[i][j] = true;
 						colors[i][j] = random(palletLength);
 						//if we're going forward, start the shooter at the section's first pixel
@@ -2753,25 +2777,19 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 							shooterLocs[i][j] = sectionEnd;
 						}
 					}
-				} else {
-					//we're running a pixel
-					ledLocation = shooterLocs[i][j];
+			    //if the shooter is acive, we need to increment it and draw trails
+				} else if(shooterActive[i][j]) {
 					
-					//if the shooter's trail has passed the end/start of the section (depending on direction), then we can 
-					//spawn a new shooter
-					if(!spawnOk[i]){ //a quick check to prevent wasting time setting spawnOK every cycle
-						if( ( ledLocation <= (sectionEnd - trailLength) ) && ( ledLocation >= (sectionStart + trailLength) ) ){
-							spawnOk[i] =  true;
-						}
-					}
+					ledLocation = shooterLocs[i][j];
 					
 					//if we're in streamer mode, we don't turn off any pixels, new ones just cancel old out
 					if(trails < 3){
-						directionArray[0] = -1 * directions[i]; //due to the way  patternSweepGetTrailLed() works, the direction array must be reversed
+						directionArray[0] = - directions[i]; //due to the way  patternSweepGetTrailLed() works, the direction array must be reversed
 						
 						//if we don't have trails, we just need to turn off the previous pixel
 						//otherwise we need to switch the pixel at the end of the trail
 						if(trails == 0){
+							//patternSweepGetTrailLed(int8_t directionArray[2], uint16_t modAmmount, int16_t ledLocation, int8_t distance)
 							trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, 1);
 							ledSegLoc = getSegmentPixel(segmentSet, i, trailLedLocation);
 							setBackgroundSingle(ledSegLoc, BgColor);
@@ -2856,7 +2874,7 @@ void PixelStrip::waves( SegmentSet segmentSet, uint32_t pallet[], byte palletLen
 	//for the total number of cycles, crossfade each segment to the next color in steps
 	for (int k = cycleStart; k != cycleEnd; k += cycleStep) {
 		stopPatternCheck();
-		yield();
+	    yield();
 		for(int l = 0; l <= steps; l++){
 			for (int i = 0; i < numSegs; i++) { 
 				nextPattern = pattern[ (i + k + cycleStep) % patternLength ];
