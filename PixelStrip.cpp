@@ -2628,13 +2628,16 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 
 //fills a segment with a specific color
 void PixelStrip::fillSegColor(SegmentSet segmentSet, byte segNum, uint32_t color){
-	uint16_t startPixel, length;
+	uint16_t startPixel; 
+	int16_t length;
+	int step;
 	byte numSecs = segmentSet.getTotalNumSec(segNum);
 	//run through segment's sections, fetch the startPixel and length of each, then color each pixel
 	for(int i = 0; i < numSecs; i++){ 
 		startPixel = segmentSet.getSecStartPixel(segNum, i);
-		length = segmentSet.getSecLength(segNum, i);
-		for (int j = startPixel; j < (startPixel + length); j++) { 
+		length = segmentSet.getSecLength(segNum, i); 
+		step = (length > 0) - (length < 0); //acount for negative lengths
+		for (int j = startPixel; j != (startPixel + length); j += step ) { 
 		  setPixelColor( j, color );
 		}
 	}
@@ -3181,7 +3184,9 @@ uint16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_
 	uint16_t numSec = segmentSet.getTotalNumSec(segNum);
 	uint16_t count = 0;
 	uint16_t prevCount = 0;
-	uint16_t secLength;
+	int16_t secLength;
+	uint16_t AbsSecLength;
+	int secLengthSign;
 	
 	//counting loop setup variables, the default is a ascending segment, so we count forward
 	int16_t step = 1;
@@ -3199,10 +3204,12 @@ uint16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_
 	//if the sum is larger than the number we want, then the pixel is in the current section
 	//use the section to get the physical pixel number
 	for(int i = startLimit; i != endLimit; i += step){
-		secLength = segmentSet.getSecLength(segNum, i);
+		secLength = segmentSet.getSecLength(segNum, i); //sec length can be negative
+		secLengthSign = (secLength > 0) - (secLength < 0);
+		AbsSecLength = abs(secLength); 
 		prevCount = count;
-		count += secLength;
-		
+		count += AbsSecLength ; //always add a positive sec length, we want to know the physical length of each section
+
 		//if the count is greater than the number we want (num always starts at 0, so secLength will always be one longer than the max num in the section)
 		//the num'th pixel is in the current segment.  
 		//for ascending segments:
@@ -3216,9 +3223,9 @@ uint16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_
 			if( secLength == 1 ){
 				return segmentSet.getSecStartPixel(segNum, i); 
 			} else if(segDirection) {
-				return (segmentSet.getSecStartPixel(segNum, i) + (num - prevCount) ); 
+				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * (num - prevCount) ); 
 			} else {
-				return (segmentSet.getSecStartPixel(segNum, i) + secLength - (num - prevCount) -1 );
+				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * ( AbsSecLength - (num - prevCount) -1 ) ) ;
 			}
 			
 		}
@@ -3993,7 +4000,7 @@ void PixelStrip::colorWipeRainbowSegRadial(SegmentSet segmentSet, uint8_t wait, 
 
 //does fireV2Seg for numCycles cycles
 void PixelStrip::doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, int numCycles, int wait){
-	stripOff(); //clear the strip, b/c fire doesn't if the flame is shorter than the strip
+	//stripOff(); //clear the strip, b/c fire doesn't if the flame is shorter than the strip
 	
 	//need to make an RGB pallet for fireV2
 	RGB palletRGB[palletLength]; 

@@ -60,7 +60,7 @@ uint16_t  SegmentSet::getSecStartPixel(byte segNum, byte secNum){
 }
 
 //returns the length of the specified section in the specified segment	
-uint16_t  SegmentSet::getSecLength(byte segNum, byte secNum){
+int16_t  SegmentSet::getSecLength(byte segNum, byte secNum){
 	return getSegProperty(segNum, secNum, 3);
 }
 

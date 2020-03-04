@@ -28,11 +28,23 @@ An explaination of segment structure:
 					A segmentSection region of a section, indicated by a start pixel number and a length.
 				The length is the total length of the region, including the start pixel. For example:
 				{12, 20} would be a section starting with 12, running 20 pixels to 31. 
+				Length can be negative (see paragraph below)
 				!!(length counting starts at 1 to be easier for non-programmers)
 				
+					A segment section can have a negative length. This allows you to change the direction of sections
+				(this is to account for segments with multiple sections, where one or more of the sections are facing the wriong way)
+				for example lets say I have two sections in a line, both 7 pixels long,
+				for whatever reason they are aligned as follows 0,1,2,3,4,5,6,13,12,11,10,9,8,7 where 6 outputs data to 7
+				we want to animate a smooth line (so it looks like 6 is connected to 13)
+				if they are defined {0, 7} and {7, 7}, then animations will jump from 6 to 7. This is not what we want.
+				Instead, if we define the second section as {13, -7}, the code will treat 13 as the first pixel, and count backwards
+				This will produce the effect we want.
+				
+				
+				
 				Data representation:
-					segmentSection consists of a struct storing two uint16_t labeled startPixel and 
-					length. Both of these must be stored in Flash by adding < const PROGMEM > when you 
+					segmentSection consists of a struct storing one uint16_t labeled startPixel and 
+					one int16_t labeled length. Both of these must be stored in Flash by adding < const PROGMEM > when you 
 					define a segmentSection. ie const PROGMEM segmentSection x = {0, 10}, where x is
 					your section name.
 			
@@ -40,8 +52,11 @@ An explaination of segment structure:
 				Description:
 					An array of segmentSections, used to form a whole segment. For example { {12, 20}, {30, 10} }
 					is an array of segmentSections the first stating at pixel 12, running for 20 pixels, and the 
-					second starting at 30 and running for 10 pixels. Note that the sections must be arranged in ascending 
-					order according to the start pixel (ie a section starting at 12 must come before one starting at 25).
+					second starting at 30 and running for 10 pixels. Order doesn't matter ie { {30, 10}, {12, 20} } is fine,
+					but section orientation is important. To produce effects as intended, all sections should be oriented so that the the end of one
+					connects to the beginning of the next. Use negative sections lengths to to this if needed.
+					If they are oriented the same, but the effect runs in reverse along each section, reverse the order of the
+					sections in the segmentSection{} array.
 					Also note that you will save memory if you declare the sections in the array (like the example) instead of 
 					using variables for each section. Also you can include the same section in mutliple section arrays, or even
 					overlaps between seperate section arrays, however; the animation effects will overwrte each other, leading to 
@@ -165,7 +180,9 @@ class SegmentSet {
 		getTotalSegLength(byte segNum),
 		getTotalNumSec(byte segNum),
 		getSectionPtr(byte segNum),
-		getSecStartPixel(byte segNum, byte secNum),
+		getSecStartPixel(byte segNum, byte secNum);
+		
+	int16_t
 		getSecLength(byte segNum, byte secNum);
 		
 	  boolean

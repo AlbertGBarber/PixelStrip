@@ -27,7 +27,8 @@ class Segment {
 		
 	  uint16_t
 		totalLength,
-		getSecStartPixel( byte secNum ),
+		getSecStartPixel( byte secNum );
+	  int16_t
 		getSecLength( byte secNum );
 		
 	  segmentSection 
