@@ -26,9 +26,9 @@ class Segment {
 		dirct;
 		
 	  uint16_t
-		totalLength,
-		getSecStartPixel( byte secNum );
+		totalLength;
 	  int16_t
+	    getSecStartPixel( byte secNum ),
 		getSecLength( byte secNum );
 		
 	  segmentSection 

@@ -19,7 +19,7 @@ uint16_t  Segment::getSegTotLen(){
 //returns the start pixel of the specified section (secNum is the index of the section within the segmentSection array)
 //b/c sections are stored in flash, we need to use pgm_read_word to fetch their properites
 //the start pixel is a uint16_t, pgm_read_word reads 16bit words.
-uint16_t  Segment::getSecStartPixel( byte secNum ){
+int16_t  Segment::getSecStartPixel( byte secNum ){
 	return pgm_read_word( &( secPtr + secNum )->startPixel);
 }
 

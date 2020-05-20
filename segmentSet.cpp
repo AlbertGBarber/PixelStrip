@@ -55,7 +55,7 @@ uint16_t  SegmentSet::getSectionPtr(byte segNum){
 }
 
 //returns the start pixel of the specified section in the specified segment (secNum is the index of the section within the segment array)
-uint16_t  SegmentSet::getSecStartPixel(byte segNum, byte secNum){
+int16_t  SegmentSet::getSecStartPixel(byte segNum, byte secNum){
 	return getSegProperty(segNum, secNum, 2);
 }
 

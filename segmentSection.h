@@ -2,7 +2,7 @@
 #define segmentSection_h
 //for explanation see segmentSet.h
 struct segmentSection {
-  uint16_t startPixel;
+  int16_t startPixel; //-1 for dummy pixel
   int16_t length;
   //support for direction of segment section, not implemented elsewhere
   //avoid using due to large increase in memory usage

@@ -179,10 +179,10 @@ class SegmentSet {
 		maxSegLength,
 		getTotalSegLength(byte segNum),
 		getTotalNumSec(byte segNum),
-		getSectionPtr(byte segNum),
-		getSecStartPixel(byte segNum, byte secNum);
+		getSectionPtr(byte segNum);
 		
 	int16_t
+	    getSecStartPixel(byte segNum, byte secNum),
 		getSecLength(byte segNum, byte secNum);
 		
 	  boolean
