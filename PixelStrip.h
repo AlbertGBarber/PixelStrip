@@ -25,7 +25,11 @@
 
 #define stopPatternCheck() ({ \
 	if( (pixelStripStopPattern) ){ \
-		(pixelStripStopPattern) = false; \
+	    if( !(subFunct) ){ \
+		    (pixelStripStopPattern) = false; \
+		} else { \
+			(subFunct) = false; \
+		} \
 		break; \
 	} \
 }) 
@@ -148,7 +152,6 @@ class PixelStrip : public Adafruit_NeoPixel {
 		fireworksRand( uint8_t numRandLeds, int32_t preferedColor, int32_t BgColor, uint8_t dimFactor, uint8_t colorMode, int wait, int numCycles),
 		fireworksSet( uint8_t numRandLeds, uint8_t dimFactor, uint32_t pallet[],  uint8_t palletLength, int32_t BgColor, uint8_t colorMode, int wait, int numCycles),
 		fillSegBgGradientRGB(SegmentSet segmentSet),
-		segRainbowSweep(SegmentSet segmentSet, boolean forward, int wait, int numCycles),
 		segGradientWaves(SegmentSet segmentSet, uint16_t numCycles, boolean inToOut, int wait, int steps),
 		segGradientCycleRand(SegmentSet segmentSet, byte numColors, byte gradSteps, uint16_t numCycles, boolean inToOut, uint8_t type, int wait),
 		segGradientCycle(SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], byte palletLength, byte gradSteps, uint16_t numCycles, boolean inToOut, int wait),
@@ -162,7 +165,10 @@ class PixelStrip : public Adafruit_NeoPixel {
 		singleWave( SegmentSet segmentSet, uint32_t waveColor, uint32_t BgColor, uint8_t waveThickness, uint8_t numCycles, boolean inToOut, uint8_t wait, uint8_t steps),
 		rainbowWave( SegmentSet segmentSet, uint8_t numCycles, boolean inToOut, uint8_t wait, uint8_t steps),
 		rainbowSingleWave( SegmentSet segmentSet, uint8_t waveThickness, uint8_t shiftFactor, uint8_t mode, uint8_t wait, uint8_t steps),
-		sonarWaves( SegmentSet segmentSet, uint32_t color, uint8_t totalFadeLength, int numCycles, boolean inToOut, uint8_t wait, uint8_t steps),
+		fadingWavesRand( SegmentSet segmentSet, uint8_t numColors, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, int numCycles, uint8_t wait, int steps),
+		fadingWaves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint8_t totalFadeLength, uint8_t spacing, boolean direct, int numCycles, uint8_t wait, int steps),
+		sonarWavesRand( SegmentSet segmentSet, uint8_t numColors, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
+		sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
 		colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], int32_t BgColor, uint8_t colorMode, boolean repeat, int numCycles, int wait ),
 		drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[]),
 		drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[]),
@@ -172,8 +178,9 @@ class PixelStrip : public Adafruit_NeoPixel {
 		drawSegLineSimpleSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endSeg, byte lineNum, uint32_t color, uint8_t colorMode),
 		spiralsSet( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], byte colorPattern[], int numCycles, int wait ),
 		spiralsRand( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, byte numColors, int32_t prefColor, uint32_t BgColor, int numCycles, int wait ),
-		colorSpinRainbow( SegmentSet segmentSet, int numCycles, int wait ),
-		sonar( SegmentSet segmentSet, uint32_t color, uint8_t numLines, uint8_t fadeLength, int numCycles, int wait ),
+		colorSpinRainbow( SegmentSet segmentSet, boolean forward, int numCycles, int wait ),
+		sonarSpinRand( SegmentSet segmentSet, uint8_t numColors, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
+		sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean direct, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
 		sparkSeg( SegmentSet segmentSet, byte sparkChance, byte maxSparks, byte numColors, uint32_t prefColor, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean direction, int numCycles, int wait ),
 		sparkSegSet( SegmentSet segmentSet, byte sparkChance, byte maxSparks, uint32_t pallet[], uint8_t palletLength, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean direction, int numCycles, int wait ),
 		colorWipeRandomSeg( SegmentSet segmentSet, uint8_t style, uint32_t numColors, int8_t wipeLength, uint8_t wait, boolean forward, boolean alternate, boolean simult),
@@ -204,7 +211,8 @@ class PixelStrip : public Adafruit_NeoPixel {
 		randColor();
 	
 	boolean
-		pixelStripStopPattern = false;
+		pixelStripStopPattern = false,
+		subFunct = false;
 	
 	//holder for the a background pallet for gradients, note that this is golbal!
 	//when setting a pallet for the Bg, call setBgPallet(newPallet, SIZE(newPallet)) to set it
