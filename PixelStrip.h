@@ -115,10 +115,11 @@ class PixelStrip : public Adafruit_NeoPixel {
 		twinkle(int32_t BgColor, int32_t preferedColor, uint8_t mode, int resetRate, int numPixels, int runTime),
 		twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLength, uint8_t mode, int resetRate, int numPixels, int runTime),
 		fire(int32_t BgColor, boolean BgColorOn, uint32_t preferedColor, int fadeRate, int fadeSteps, int numPixels, int randFactor, int runTime),
-		doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, int numCycles, int wait),
-		fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, int wait),
+		doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int numCycles, int wait),
+		fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int wait),
 		setPixelHeatColor(int Pixel, byte temperature),
 		setPixelHeatColorPallet(int Pixel, byte temperature, RGB pallet[], uint8_t palletLength),
+		setPixelHeatColorPalletNoBlend(int Pixel, byte temperature, RGB pallet[], uint8_t palletLength),
 		fireV3(uint32_t preferedColor, int runTime),
 		theaterChase(uint32_t color, int32_t BgColor, uint8_t wait, uint8_t numCycles, uint8_t spacing),
 		theaterChaseRainbow(int32_t BgColor, uint8_t wait, uint8_t spacing, uint8_t shiftFactor),
@@ -170,8 +171,8 @@ class PixelStrip : public Adafruit_NeoPixel {
 		sonarWavesRand( SegmentSet segmentSet, uint8_t numColors, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
 		sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint32_t BgColor, uint8_t totalFadeLength, uint8_t spacing, boolean inToOut, boolean alternate, boolean bounce, boolean bounceChange, int numCycles, uint8_t wait),
 		colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], int32_t BgColor, uint8_t colorMode, boolean repeat, int numCycles, int wait ),
-		drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[]),
-		drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[]),
+		drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[], uint8_t colorMode, uint8_t bgColorMode, boolean brReplace),
+		drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[], uint8_t colorMode, uint8_t bgColorMode, boolean brReplace),
 		colorSpinSimple( SegmentSet segmentSet, byte numColors, int32_t prefColor, int32_t BgColor, uint8_t sweepLength, int numSweeps, byte sweepSpacing, byte patternMode, byte colorMode, int numCycles, int wait ),
 		colorSpinSimpleSet( SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], int32_t BgColor, byte sweepLength, int numSweeps, byte sweepSpacing, byte patternMode, byte colorMode, int numCycles, int wait ),
 		drawSegLineSimple(SegmentSet segmentSet, byte lineNum, uint32_t color, uint8_t colorMode),
@@ -192,11 +193,12 @@ class PixelStrip : public Adafruit_NeoPixel {
 		colorWipeRainbowSec(SegmentSet segmentSet, uint8_t wait, boolean forward, boolean alternate, boolean inToOut, byte style ),
 		colorWipeSegRadial(SegmentSet segmentSet, byte colorPattern[], uint8_t colorPatternLength, uint32_t pallet[], byte style, boolean forward, uint8_t wait),
 		colorWipeRainbowSegRadial(SegmentSet segmentSet, uint8_t wait, boolean forward),
-		doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, int numCycles, int wait),
-		fireV2Seg(SegmentSet segmentSet, RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, int wait);
+		doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, boolean blend, int numCycles, int wait),
+		fireV2Seg(SegmentSet segmentSet, uint16_t heatSegStarts[], uint16_t segmentSetLength, RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, boolean blend, int wait);
 		
 	int16_t	
-	    getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t num);
+	    getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t num),
+		getPixelNumFromLineNum(SegmentSet segmentSet, uint16_t maxSegLength, uint8_t segNum, byte lineNum);
 	
 	uint16_t 
 		bgPalletStripSize;
@@ -208,6 +210,7 @@ class PixelStrip : public Adafruit_NeoPixel {
 		desaturate(uint32_t color, byte percent),
 		Wheel(byte WheelPos),
 		getCrossFadeStep(RGB startColor, RGB endColor, int steps, int step),
+		drawSegLineExtraColorModes(SegmentSet segmentSet, uint16_t maxSegLength, int16_t pixelNum, byte lineNum, uint8_t segNum, uint8_t colorMode),
 		randColor();
 	
 	boolean

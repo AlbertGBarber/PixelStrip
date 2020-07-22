@@ -3,13 +3,13 @@
 
 
 PixelStrip::PixelStrip(uint16_t n, uint8_t p, uint8_t t):
-Adafruit_NeoPixel(n, p, t), 
+Adafruit_NeoPixel(n, p, t),
 				 numLEDs(n),
-				 type(t), 
+				 type(t),
 				 //index of r,g,b color values in the 32bit packed color number
-				 rByteIndex(16), 
+				 rByteIndex(16),
 				 gByteIndex(8),
-				 bByteIndex(0) 
+				 bByteIndex(0)
 				 {};
 //improvments TODO:
 			  //. write an exponential dimming function (and allow trail length setting on patternSweep) (done, but exp dimming might be off)
@@ -49,8 +49,9 @@ Adafruit_NeoPixel(n, p, t),
 			  //. blend the colors in fireV2 for a more nuanced fire (done)
 			  //. add the ability to shift a rainbow bg / anything that uses wheel by adding and offset parameter (you could also do this of the BgGradient)
 			  //. adjust segGradientCycleSweep to account for dummy leds
-			  
-//Patterns TODO: 
+			  //. merge sonarWave and sonarSpin into one funct b/c they share the same code mostly
+
+//Patterns TODO:
 		  //. a proper fireworks routine (trails fade over time), could be a mod of the patternSweep with exponentially dimming trails
 		  //. Draw pattern based on segments, (basically a static colorSpin)
 		  //. a proper rainbow mode for color spin, cycles through rainbow based on longest segment? (done)
@@ -68,7 +69,7 @@ Adafruit_NeoPixel(n, p, t),
 		  //. low memory version of waves (done)
 		  //. a colorWipe function that does random length wipes
 		  //. radial color wipe funct (done)
-		  //. a static waves function (ie a BG that doesn't change as waves move), write like a radial patternSweep
+		  //. a static waves function (ie a BG that doesn't change as waves move), write like a radial patternSweep (done? sonar?)
 		  //. random color waves function (done)
 		  //. color spin simple pallet rand (easier to gen a random pallet seperatly)
 		  //. simple steamer where it takes a pallet, no pattern (like simpleWaves)
@@ -76,7 +77,7 @@ Adafruit_NeoPixel(n, p, t),
 		  //. a gradient segment function that repeats the same gradient down each segment (done)
 		  //. add a rainbow mode to shooter seg where the rainbow is destributed down the seg
 		  //. gradientSweep rainbow (needs direction setting in segment definition)
-		 
+
 void PixelStrip::stripOff(void) {
   clear();
   show();
@@ -88,7 +89,7 @@ void PixelStrip::fillStrip(uint32_t color, boolean showNow) {
 
 //fills a section of the strip with a color, automatically showing is optional
 void PixelStrip::fillStripSection(uint32_t color, uint16_t startPixel, uint16_t endPixel, boolean showNow){
-	
+
   for (uint16_t i = startPixel; i <= endPixel; i++ ) {
     setPixelColor(i, color);
   }
@@ -132,7 +133,7 @@ void PixelStrip::setBgPallet(RGB pallet[], uint8_t palletLength){
 
 //sets the BgPallet to a palletLength number of random colors
 void PixelStrip::genRandBgPallet(uint8_t palletLength){
-    RGB pallet[palletLength]; 
+    RGB pallet[palletLength];
 	for(int i = 0; i < palletLength; i++){
 		pallet[i].r = random(255);
 		pallet[i].g = random(255);
@@ -149,11 +150,11 @@ void PixelStrip::genRandBgPallet(uint8_t palletLength){
 void PixelStrip::fillBgGradientRGB(){
 	uint32_t color;
 	uint16_t ledLocation;
-	
+
 	//makes the gradient sections as long as possible
 	//uint16_t steps = ( numLEDs / (bgPalletStripSize - 1) );
 	uint16_t steps = ceil(float(numLEDs) / (bgPalletStripSize - 1));
-	
+
 	//for each bgColor, (-1 because we dont want to start crossfading the last color)
 	//crossfade towards the next color in the BgPallet
 	for(int i = 0; i < (bgPalletStripSize - 1); i++){
@@ -178,15 +179,15 @@ uint32_t PixelStrip::getBgGradientColor(int16_t ledLocation){
 	uint16_t steps = ( numLEDs / (bgPalletStripSize - 1) ) ;
 	int i = 0;
 	int j = 0;
-	
+
 	//determine what color section of the crossfade we're in
 	while( ( i + 1 ) * steps < ledLocation ){
 		i++;
 	}
-	
+
 	//get the crossfade step
 	j = ledLocation - (i * steps );
-	
+
 	return getCrossFadeStep( bgPalletStrip[i], bgPalletStrip[ (i + 1) % bgPalletStripSize], steps, j) ;
 	//setPixelColor(ledLocation,  getCrossFadeStep( bgPalletStrip[i], bgPalletStrip[ (i + 1) % bgPalletStripSize], steps, j) );
 }
@@ -270,10 +271,10 @@ void PixelStrip::genRandPallet(uint32_t pallet[], uint8_t palletLength){
 
 //dims a specific color by a factor
 uint32_t PixelStrip::dimColor(uint32_t color, uint8_t factor) {
-  
+
   uint8_t rgb[3];
-  
-  splitColor( color, rgb ); 
+
+  splitColor( color, rgb );
   //Shift R, G and B components factor bit(2) to the right
   uint32_t dimColor = Color(rgb[0] >> factor, rgb[1] >> factor, rgb[2] >> factor);
   return dimColor;
@@ -295,7 +296,7 @@ void PixelStrip::dimStrip() {
 //and dims it by the percentage value (100 is no dim, 0 is off)
 //dimming is non-linear to more closly match human brigtness perception
 uint32_t PixelStrip::desaturate(uint32_t color, byte percent){
-	
+
 	//a defensize check to prevent overflow
 	if(percent >= 100) {
 		return color;
@@ -307,13 +308,13 @@ uint32_t PixelStrip::desaturate(uint32_t color, byte percent){
 
 	byte rgb[3];
 
-	splitColor( color, rgb ); 
-	  
+	splitColor( color, rgb );
+
 	byte rgbNew[3];
 	rgbNew[0] =  rgb[0] * multiplier;
 	rgbNew[1] =  rgb[1] * multiplier;
-	rgbNew[2] =  rgb[2] * multiplier;  
-	  
+	rgbNew[2] =  rgb[2] * multiplier;
+
 	return Color( rgbNew[0], rgbNew[1], rgbNew[2] );
 }
 
@@ -344,21 +345,21 @@ RGB PixelStrip::makeRGBFromColor(uint32_t color){
 	RGB newRGB;
 	uint8_t colorSplit[3];
 	splitColor( color, colorSplit );
-	
-	newRGB.r = colorSplit[0]; 
-	newRGB.g = colorSplit[1]; 
-	newRGB.b = colorSplit[2]; 
+
+	newRGB.r = colorSplit[0];
+	newRGB.g = colorSplit[1];
+	newRGB.b = colorSplit[2];
 	newRGB.color32 = color;
-	
+
 	return newRGB;
 }
 
-//translates a pallet's entries to RGB format 
+//translates a pallet's entries to RGB format
 //input pallet is uint32_t array of colors
 //output pallet is RGB array of colors
 void PixelStrip::makeRGBpalletFromPallet(uint32_t pallet[], RGB palletRGB[], byte palletLength){
 	for(uint8_t i = 0; i < palletLength; i++){
-		palletRGB[i] = makeRGBFromColor( pallet[i] ); 
+		palletRGB[i] = makeRGBFromColor( pallet[i] );
 	}
 }
 
@@ -383,7 +384,7 @@ void PixelStrip::crossFadeColor(uint32_t startColor, uint32_t endColor, int step
   subFunct = true; //for stopPatternCheck, so we break out in the calling function too
   RGB startColorRGB = makeRGBFromColor(startColor);
   RGB endColorRGB = makeRGBFromColor(endColor);
-  
+
   crossFadeRGB(startColorRGB, endColorRGB, steps, wait);
 }
 
@@ -391,11 +392,11 @@ void PixelStrip::crossFadeColor(uint32_t startColor, uint32_t endColor, int step
 uint32_t PixelStrip::getCrossFadeStep( RGB startColor, RGB endColor, int steps, int step){
 	uint8_t newColor[3];
 	int32_t step32 = (int32_t)step;
-	
+
 	newColor[0] = (int16_t)startColor.r + (int32_t)( ( (int16_t)endColor.r - (int16_t)startColor.r ) * step32) / steps;
     newColor[1] = (int16_t)startColor.g + (int32_t)( ( (int16_t)endColor.g - (int16_t)startColor.g ) * step32) / steps;
     newColor[2] = (int16_t)startColor.b + (int32_t)( ( (int16_t)endColor.b - (int16_t)startColor.b ) * step32) / steps ;
-	
+
 	//Serial.println(newColor[2]);
 	return Color(newColor[0], newColor[1], newColor[2]);
 }
@@ -407,17 +408,17 @@ uint32_t PixelStrip::getCrossFadeStep( RGB startColor, RGB endColor, int steps, 
 //each fade is done in steps with wait between each step
 void PixelStrip::crossFadeCycle(uint8_t pattern[], uint8_t patternLength, uint32_t pallet[], int numCycles, int steps, int wait){
 	uint32_t startColor, nextColor;
-	
+
 	for(int i = 0; i < numCycles; i++){
 		yield();
 		stopPatternCheck();
-		
+
 		startColor = pallet[ pattern[i % patternLength] ];
 		nextColor = pallet [ pattern[(i + 1) % patternLength] ];
-		
+
 		crossFadeColor(startColor, nextColor, steps, wait);
 	}
-	
+
 }
 
 //crossfades the entire strip through random colors for a certain number of cycles
@@ -430,27 +431,27 @@ void PixelStrip::crossFadeCycleRand(uint8_t numColors, int numCycles, int steps,
 	for(int i = 0; i < numCycles; i++){
 		yield();
 		stopPatternCheck();
-		
+
 		crossFadeColor(startColor, nextColor, steps, wait);
-		
+
 		startColor = nextColor;
 		nextColor = randColor();
 	}
 }
 
-//todo, rerwite this and depending functions to use a pallet instead of storing a 
+//todo, rerwite this and depending functions to use a pallet instead of storing a
 //whole strips worth of 32bit values
-//cross fades the strip from the current pattern on the strip to a final pattern in 
+//cross fades the strip from the current pattern on the strip to a final pattern in
 //a number of steps with a set wait time inbetween each step
 void PixelStrip::crossFadeRandomPattern(uint32_t pattern[], int wait, int steps) {
   uint8_t prevBrightness = getBrightness();
   int stepDiff;
-  uint32_t currentColor; 
+  uint32_t currentColor;
   uint8_t endColorSplit[3];
   uint8_t currentColorSplit[3];
   uint8_t newColorSplit[3];
-  
-  for (int j = 0; j < steps; j++) { 
+
+  for (int j = 0; j < steps; j++) {
 	stopPatternCheck();
     stepDiff = ( steps - j );
     setBrightness(255); //set brightness to max to get the correct 32bit color values
@@ -460,14 +461,14 @@ void PixelStrip::crossFadeRandomPattern(uint32_t pattern[], int wait, int steps)
 	  //unpack current and end color
 	  splitColor( currentColor , currentColorSplit );
 
-	  splitColor( pattern[i] , endColorSplit );	  
-	  
+	  splitColor( pattern[i] , endColorSplit );
+
 	  //slightly different formula to other cross fades, lowers memory usage b/c we don't need
 	  //both start and end colors, but we need to get the current color each loop
       newColorSplit[0] = currentColorSplit[0] + ( int(endColorSplit[0]) -  currentColorSplit[0] ) /  stepDiff  ;
       newColorSplit[1] = currentColorSplit[1] + ( int(endColorSplit[1]) -  currentColorSplit[1] ) /  stepDiff  ;
       newColorSplit[2] = currentColorSplit[2] + ( int(endColorSplit[2]) -  currentColorSplit[2] ) /  stepDiff  ;
-	  
+
       setPixelColor(i, Color(newColorSplit[0], newColorSplit[1], newColorSplit[2]));
     }
     setBrightness(prevBrightness);
@@ -483,11 +484,11 @@ void PixelStrip::randomColors(int32_t BgColor, boolean sparkleOn, int32_t prefer
   uint8_t palletLength;
   //if preferedColor is negative (ie no preference)
   //the colors will be picked at random (set by passing a palletLength of 0 to randomColorSet)
-  if(preferedColor < 0){ 
-	palletLength = 0;  
+  if(preferedColor < 0){
+	palletLength = 0;
   } else {
 	 palletLength = 1;
-	 pallet[0] = preferedColor;	 
+	 pallet[0] = preferedColor;
   }
   randomColorSet( BgColor, sparkleOn, pallet, palletLength, resetRate, numPixels, runTime);
 }
@@ -555,11 +556,11 @@ void PixelStrip::twinkle(int32_t BgColor, int32_t preferedColor, uint8_t mode, i
   uint8_t palletLength;
   //if preferedColor is negative (ie no preference)
   //the colors will be picked at random (set by passing a palletLength of 0 to randomColorSet)
-  if(preferedColor < 0){ 
-	palletLength = 0;  
+  if(preferedColor < 0){
+	palletLength = 0;
   } else {
 	 palletLength = 1;
-	 pallet[0] = preferedColor;	 
+	 pallet[0] = preferedColor;
   }
   twinkleSet(BgColor, pallet, palletLength, mode, resetRate, numPixels, runTime);
 }
@@ -583,13 +584,13 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
   uint32_t BgColorDis;
   boolean firstCycle = true;
   boolean modeOneOn = false;
-  
+
   //prevent random color in the setBackground function, this won't work correctly b/c
   //we need to know the BgColor for twinkling
   if( BgColor == -2){
-	 BgColor = 0; 
+	 BgColor = 0;
   }
-  	
+
   //loop until it's time to turn on a pixel at pixelIndex,
   //then increment the pixelIndex
   //the pixelIndex is reset once the numPixels have been turned on
@@ -601,20 +602,20 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
       resetTime = currentTime;
 
       //fills the strip with a background color once per reset cycle
-	  if( pixelIndex == (numPixels - 1) ){  
+	  if( pixelIndex == (numPixels - 1) ){
 		pixelIndex = 0;
-		
+
 		//make a new set of leds to light up
 		//and set the background color
 		//needs to run on the first cycle to create starting point for other modes
 	   if( (mode == 0) || firstCycle){ // mode 0 reseting all the on leds
 		 firstCycle = false;
-		 for(int i = 0; i < numPixels; i++){ 
+		 for(int i = 0; i < numPixels; i++){
 			pixelSet[i] = random(numLEDs);
 		 }
-				
+
 	   setBackground( BgColor );
-		 
+
 	   } else if ( mode == 1 ) {  //we need to flag mode one to start if we've run one cycle
 			modeOneOn = true;
 	   } else if (mode == 2) { //set a new led to turn on and turn off an old
@@ -625,12 +626,12 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
 			}
 			uint8_t newPixel = random(numLEDs); //set a new pixel to turn on and put it in the array
 			pixelSet[numPixels - 1] = newPixel;
-			
+
 			//set the off pixel to the background color
-			setBackgroundSingle(offPixel, BgColor);	
-	   }		 
+			setBackgroundSingle(offPixel, BgColor);
+	   }
 	  }
-	  
+
       //turns on the next pixel in the pixelSet, choosing a color based on the options
       switch(palletLength){
 			case 0 : //0 pallet length, no pallet, so set colors at random
@@ -643,21 +644,21 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
 				color = pallet[ random(palletLength) ];
 				break;
 	  }
-	  
+
 	  //if we're in mode 1, and we've gone through a cycle, we need to
 	  //turn the leds off instead of on, and then reset to the first cylce again
 	  if( modeOneOn ){
 		//set the off pixel to the background color
-		setBackgroundSingle( pixelSet[pixelIndex], BgColor );	
-		
+		setBackgroundSingle( pixelSet[pixelIndex], BgColor );
+
 		//if we've turned off all the leds, we need to run the first cycle again
-	    if( pixelIndex == (numPixels - 2) ) { 
+	    if( pixelIndex == (numPixels - 2) ) {
 	      firstCycle = true;
 		  modeOneOn =  false;
-		} 
+		}
 	  } else {
 	    setPixelColor(pixelSet[pixelIndex], color);
-	  }		
+	  }
       show();
 	  pixelIndex++;
     }
@@ -702,7 +703,7 @@ void PixelStrip::fire(int32_t BgColor, boolean BgColorOn, uint32_t preferedColor
       j = random(numLEDs);
       rand = random(randFactor);
       if (preferedColorSetting) {
-		uint8_t newColor[3]; 
+		uint8_t newColor[3];
 		splitColor(preferedColor, newColor);
 		red = newColor[0] * rand / 255;
         blue = newColor[1] * rand / 255 ;
@@ -719,18 +720,18 @@ void PixelStrip::fire(int32_t BgColor, boolean BgColorOn, uint32_t preferedColor
 }
 
 //does fireV2 for numCycles cycles
-void PixelStrip::doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, int numCycles, int wait){
+void PixelStrip::doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int numCycles, int wait){
 	stripOff(); //clear the strip, b/c fire doesn't if the flame is shorter than the strip
-	
+
 	//need to make an RGB pallet for fireV2
-	RGB palletRGB[palletLength]; 
+	RGB palletRGB[palletLength];
 	//recreate the supplied pallet in RGB
 	makeRGBpalletFromPallet(pallet,palletRGB, palletLength);
-	
+
 	for(int i = 0; i < numCycles; i++){
 		stopPatternCheck();
 		yield();
-		fireV2(palletRGB, palletLength, Cooling, Sparking, flameLength, repeat, forward, alternating, wait);
+		fireV2(palletRGB, palletLength, Cooling, Sparking, flameLength, repeat, forward, alternating, blend, wait);
 	}
 }
 
@@ -743,47 +744,47 @@ void PixelStrip::doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, 
 	//try { Color(255, 0, 0), Color(255, 143, 0) , Color(255, 255, 255) } for a tranditional fire
 	//or {Color(238, 130, 238),  Color(123, 7, 197) , Color(225, 0, 127), Color(255, 255, 255) } for a pink/purple fire
 //The other variables determine how the fire is drawn:
-	//Cooling: indicates how fast a flame cools down. More cooling means shorter flames, 
+	//Cooling: indicates how fast a flame cools down. More cooling means shorter flames,
 	//recommended values are between 20 and 100. 50 seems the nicest.
-	
-	//Sparking: indicates the chance (out of 255) that a spark will ignite. A higher value makes the fire more active. 
+
+	//Sparking: indicates the chance (out of 255) that a spark will ignite. A higher value makes the fire more active.
 	//Suggested values lay between 50 and 200. 120 works well.
-	
+
 	//flameLength: sets the maximum length of the strip taken up by the flame
-	
-	//repeat: if true, then the fire will repeat as many times as possible along the strip, 
+
+	//repeat: if true, then the fire will repeat as many times as possible along the strip,
 	//ie for a 60 pixel strip, with flameLength 10, and repeat on, you would get 10 fires, one after another
 	//note that the fire is repeated, so each fire section is identical
-	
-	//forward: sets the direction that the inital fire burns in, 
+
+	//forward: sets the direction that the inital fire burns in,
 	//setting it true means the fire starts at zero, otherwise it will start at flameLength from the beginning of the strip
-	
-	//alternating: if true, then subesequent fires will reverse direction 
+
+	//alternating: if true, then subesequent fires will reverse direction
 	//for example you can generate a fire starting from the the middle of the strip by setting flameLength to halve the strip length
 	//repeat to true, direction to false, and alternating to true
 
 	//wait sets the time between drawing new flames
-void PixelStrip::fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, int wait) {
-  
+void PixelStrip::fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int wait) {
+
   byte heat[flameLength];
   uint16_t ledLocation;
   int cooldown;
   uint8_t numFlames;
   boolean forwardLocal = forward; //pevent overwriting the variable passed in
-  
+
   //if we're repeating, we want to cram as many flames as possible
   //we round up the number of flames that will fit
   //otherwise we just do one flame
   if(repeat){
-	 numFlames = ceil( float(numLEDs) / flameLength); 
+	 numFlames = ceil( float(numLEDs) / flameLength);
   } else {
-	 numFlames = 1; 
+	 numFlames = 1;
   }
 
   // Step 1.  Cool down every cell a little
   for( int i = 0; i < flameLength; i++) {
     cooldown = random(0, ((Cooling * 10) / flameLength) + 2);
-	
+
     if(cooldown>heat[i]) {
       heat[i]=0;
     } else {
@@ -795,7 +796,7 @@ void PixelStrip::fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Spa
   for( int k = (flameLength - 1); k >= 2; k--) {
     heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
   }
-  
+
   // Step 3.  Randomly ignite new 'sparks' near the bottom
   if( random(255) < Sparking ) {
     int y = random(min( 7, flameLength ));
@@ -814,21 +815,25 @@ void PixelStrip::fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Spa
 		} else {
 			ledLocation = ( (i + 1) * flameLength) - (j);
 		}
-		
-		//if we're repeating we might try to draw a significant portion of the 
+
+		//if we're repeating we might try to draw a significant portion of the
 		//the flame off the strip. If that happens, then we don't need to draw anymore
 		//and can break out of the loop
 		if(ledLocation > numLEDs || ledLocation < 0){
 			break;
 		}
-		setPixelHeatColorPallet( ledLocation, heat[j], pallet, palletLength );
+		if(blend){
+			setPixelHeatColorPallet( ledLocation, heat[j], pallet, palletLength);
+		}else{
+			setPixelHeatColorPalletNoBlend(ledLocation, heat[j], pallet, palletLength);
+		}
 	}
 	//if we're alternating, we just flip the forward value
 	if(alternating){
 		forwardLocal = !forwardLocal;
 	}
   }
-  
+
   show();
   delay(wait);
 }
@@ -854,32 +859,60 @@ void PixelStrip::setPixelHeatColor(int Pixel, byte temperature) {
   }
 }
 
+//!!WARNING no not try to merge setPixelHeatColorPallet and setPixelHeatColorPalletNoBlend
+//!!Doing so causes a voodoo bug when passing in blend (using Serial.println(blend) fixes it, so it's voodoo)
 //sets heat colors using a pallet, dimming the colors a bit depending on their heat
-//essentially divides the possible heat range into sections, 
+//essentially divides the possible heat range into sections,
 //determines which section the heat is in, and sets the color
+ //if blend is true we'll try to blend between colors to get a cleaner fire
 //the set color is a blend between the current color and the next based on the pixel's temperature
 //this produces a more nuanced fire
+//this uses more processing power, so turn it off if the animation is too slow (or you're having color bugs)
 void PixelStrip::setPixelHeatColorPallet(int Pixel, byte temperature, RGB pallet[], uint8_t palletLength) {
-  //byte t192 = map(temperature, 0, 255, 3, 0);
-  uint32_t color;
-  uint8_t segSize = 255 / palletLength;
-  uint8_t targetColor;
-  uint8_t segTempStep;
+    //byte t192 = map(temperature, 0, 255, 3, 0);
+	uint32_t color;
+	uint8_t segSize = 255 / palletLength;
+	uint8_t targetColor;
+	uint8_t segTempStep;
 
-  //determine which color the heat belongs to and blend it
-  for(int i = (palletLength - 1); i >= 0; i--){
-	  //if we find the right section, we don't need to loop any more, so we break
-	  if(temperature > (i * segSize) ){
-		 //color = dimColor(pallet[i], t192);
-		 //if we're at the end last color, we don't need to blend, prevent us from running off the pallet end
-		  targetColor = min(i + 1, palletLength - 1);
-		  //segTempStep = max((int)temperature - (i * segSize), 0);
-		 //blend between the current color an the next based on the what temperature the pixel is at
-		 color = getCrossFadeStep( pallet[i], pallet[targetColor], segSize, temperature - (i * segSize) );
-		 break;
-	  }
-  }
-  setPixelColor(Pixel, color);
+  
+    //determine which color the heat belongs to and blend it
+	for(int i = (palletLength - 1); i >= 0; i--){
+		//if we find the right section, we don't need to loop any more, so we break
+		if(temperature > (i * segSize) ){
+			//color = dimColor(pallet[i], t192);
+			//if blend is true we'll try to blend between colors to get a cleaner fire
+			//this uses more processing power, so turn it off if the animation is too slow (or you're having color bugs)
+			//if we're at the end last color, we don't need to blend, prevent us from running off the pallet end
+			targetColor = min(i + 1, palletLength - 1);
+			//segTempStep = max((int)temperature - (i * segSize), 0);
+			//blend between the current color an the next based on the what temperature the pixel is at
+			color = getCrossFadeStep( pallet[i], pallet[targetColor], segSize, temperature - (i * segSize) );
+			break;	
+		}
+	}
+	setPixelColor(Pixel, color);
+}
+
+//sets heat colors using a pallet, dimming the colors a bit depending on their heat
+//essentially divides the possible heat range into sections,
+//determines which section the heat is in, and sets the color
+void PixelStrip::setPixelHeatColorPalletNoBlend(int Pixel, byte temperature, RGB pallet[], uint8_t palletLength) {
+	//byte t192 = map(temperature, 0, 255, 3, 0);
+	uint32_t color;
+	uint8_t segSize = 255 / palletLength;
+	uint8_t targetColor;
+	uint8_t segTempStep;
+  
+	//determine which color the heat belongs to and blend it
+	for(int i = (palletLength - 1); i >= 0; i--){
+		//if we find the right section, we don't need to loop any more, so we break
+		if(temperature > (i * segSize) ){
+			color = pallet[i].color32;
+			break;
+		}
+	}
+	setPixelColor(Pixel, color);
 }
 
 //more of a flickering effect than fire
@@ -922,20 +955,20 @@ void PixelStrip::theaterChase(uint32_t color, int32_t BgColor, uint8_t wait, uin
 			}
 			show();
 			delay(wait);
-			
+
 			//turn every (spacing) pixel to BgColor
 			for (int i = 0; i < numLEDs; i = i + spacing) {
-				setBackgroundSingle( i + q, BgColor);    
+				setBackgroundSingle( i + q, BgColor);
 			}
 		}
 	}
-}	
+}
 
 //Theatre-style crawling lights with rainbow effect
 //passing -2 as BgColor sets it randomly, -3 sets to Bg gradient
 void PixelStrip::theaterChaseRainbow(int32_t BgColor, uint8_t wait, uint8_t spacing, uint8_t shiftFactor) {
   if(BgColor == -1){ //prevent rainbow Bg as nothing would happen
-	BgColor = 0;  
+	BgColor = 0;
   }
   for (int j = 0; j < 256; j= j + shiftFactor) {   // cycle all 256 colors in the wheel
     stopPatternCheck();
@@ -948,7 +981,7 @@ void PixelStrip::theaterChaseRainbow(int32_t BgColor, uint8_t wait, uint8_t spac
       delay(wait);
 		//turn every (spacing) pixel for the BgColor
       for (int i = 0; i < numLEDs; i = i + spacing) {
-        setBackgroundSingle( i + q, BgColor);   
+        setBackgroundSingle( i + q, BgColor);
       }
     }
   }
@@ -985,7 +1018,7 @@ void PixelStrip::rainbowCycle(uint8_t wait, uint8_t numCycles) {
 void PixelStrip::solidRainbowCycle(uint8_t wait, uint8_t numCycles) {
   uint16_t i;
   uint32_t color;
-  
+
   for (i = 0; i < 256 * numCycles; i++) { // cycles thru all colors on wheel
 	stopPatternCheck();
 	color = Wheel(i & 255);
@@ -996,7 +1029,7 @@ void PixelStrip::solidRainbowCycle(uint8_t wait, uint8_t numCycles) {
 }
 
 //color wipes a random set of colors
-//numColors sets how many colors to wipe 
+//numColors sets how many colors to wipe
 //see colorWipe and colorWipePallet for more details
 //style sets the type of wipe:
 	//1: normal wipe, each segment is a color from the pattern (with wrapping)
@@ -1009,7 +1042,7 @@ void PixelStrip::colorWipeRandom(uint8_t style, uint32_t numColors, uint16_t seg
 	byte pattern[numColors];
 	for(int i = 0; i < numColors; i++){
 		pallet[i] = randColor();
-		pattern[i] = i;	
+		pattern[i] = i;
 	}
 	colorWipePallet(style, simult, pattern, numColors, pallet, segLength, wait, forward, alternate);
 }
@@ -1043,18 +1076,18 @@ void PixelStrip::colorWipe(uint32_t color, uint16_t wipeLength, int wait, boolea
 void PixelStrip::colorWipePallet(uint8_t style, boolean simult, byte colorPattern[], uint8_t colorPatternLength, uint32_t pallet[], uint16_t wipeLength, int wait, boolean forward, boolean alternate) {
   uint8_t numSegs = ceil(float(numLEDs) / wipeLength);
   boolean forwardLocal = forward; //copy of forward, as it may change in the loops
-  
+
   int16_t LEDPattern[numSegs][2];
   //set loop parameters for a forward loop
   int8_t directionConst = 1;
   uint16_t segStart = 0;
-  
+
   //if we want to go backwards, change the loop parameters
   if(!forwardLocal){
 	directionConst = -1;
     segStart = wipeLength - 1;
   }
-  
+
 	for (int j = 0; j < numSegs; j++) {
 		if(alternate){ //if we're alternating, we switch the diection variables with each segemnt
 			if(forwardLocal){
@@ -1068,7 +1101,7 @@ void PixelStrip::colorWipePallet(uint8_t style, boolean simult, byte colorPatter
 		}
 		LEDPattern[j][0] = (j * wipeLength) + segStart;
 		LEDPattern[j][1] = directionConst;
-		
+
   }
   colorWipeAdvanced(style, simult, LEDPattern, numSegs, colorPattern, colorPatternLength, pallet, wipeLength, wait);
 }
@@ -1086,8 +1119,8 @@ void PixelStrip::colorWipePallet(uint8_t style, boolean simult, byte colorPatter
 //4: rainbow mode 2, the rainbow will be distributed across each segment individually
 //5: color wipes whatever the BgPallet gradient is set to
 void PixelStrip::colorWipeAdvanced(uint8_t style, boolean simult, int16_t LEDPattern[][2], uint8_t LEDPatternLength, byte colorPattern[], uint8_t colorPatternLength, uint32_t pallet[], uint16_t wipeLength, int wait){
-  uint16_t ledLocation; //led location for wipe 
-  
+  uint16_t ledLocation; //led location for wipe
+
   //set the inner and outer loop limits
   //allows reusing of loops to do a sequential wipe (one segment after another)
   //or a simultaneous wipe (all segments at once)
@@ -1096,61 +1129,61 @@ void PixelStrip::colorWipeAdvanced(uint8_t style, boolean simult, int16_t LEDPat
   uint16_t wipeIndex;
   uint16_t LEDPatternIndex;
   uint32_t color;
-  
+
   if(simult){
 	outerLoopLimit = wipeLength;
 	innerloopLimit = LEDPatternLength;
   }
-  
+
   //loops through each segment, setting one led at a time
   for(int i = 0; i < outerLoopLimit; i++){
 	stopPatternCheck();
 	for (int j = 0; j < innerloopLimit; j++) {
-		
+
 		//mode switching adjusts from sequential to simultaneous
 		//by matching the loop indexs
-		if(simult){	
+		if(simult){
 			wipeIndex = i;
 			LEDPatternIndex = j;
 		} else {
 			wipeIndex = j;
 			LEDPatternIndex = i;
 		}
-		
-		//sets the led location; adds the current loop value corrosponding 
+
+		//sets the led location; adds the current loop value corrosponding
 		//to the wipelength multiplied by the direction indicator to the lED start point
 		ledLocation = LEDPattern[LEDPatternIndex][0] + ( wipeIndex * LEDPattern[LEDPatternIndex][1] );
-		
+
 		//skin any leds that fall off the strip (allows repeated wipes to cover prime numbered strips)
 		if( (ledLocation >= numLEDs) || (ledLocation < 0) ){ //if we've run over the number of leds, stop the loop
 		  continue;
 		}
-		
+
 		//set the pixel color according to the style
 		switch(style){
 			case 1 : //color wipes each color from pallet in turn
 			  color = pallet[ colorPattern[ LEDPatternIndex % colorPatternLength ] ];
 			break;
-			
+
 			case 2 : //color wipes alternating colors from pallet along the wipe
 			  color = pallet[ colorPattern[ wipeIndex % colorPatternLength ] ];
 			break;
-			
+
 			case 3 :  //color wipes a rainbow spread evenly across the strip
 			  color = Wheel( (ledLocation  * 256 / numLEDs) & 255 );
 			break;
-			
+
 			case 4 :  //color wipes a rainbow spreak evenly across each segment
 			  color = Wheel( (ledLocation  * 256 / wipeLength) & 255);
 			break;
-			
+
 			case 5 : //color wipes whatever the BgPallet gradient is set to
 			  color = getBgGradientColor(ledLocation);
 			break;
 		}
-		
+
 		setPixelColor( ledLocation, color );
-		
+
 		if(!simult){
 	      show();
 	      delay(wait);
@@ -1160,13 +1193,13 @@ void PixelStrip::colorWipeAdvanced(uint8_t style, boolean simult, int16_t LEDPat
 		show();
 		delay(wait);
 	}
-  }	
+  }
 }
 
 // Fill the pixels one after the other with a color in a rainbow pattern
 //forward == true moves pattern forward, ie incementing pixel steps
 //false moves it backward
-//segmented sets the style of rainbow for each segment, 
+//segmented sets the style of rainbow for each segment,
 //either distributed across the strip, or across each segement
 void PixelStrip::colorWipeRainbow(int wait, uint16_t wipeLength, boolean forward, boolean alternate, boolean segmented, boolean simult) {
   uint8_t style = 3;
@@ -1185,13 +1218,13 @@ void PixelStrip::colorWipeGradient(int wait, uint16_t wipeLength, boolean forwar
 
 //builds a pattern for use with simpleRepeatPattern functions
 //input is a x2 array of color lengths and pallet indexes, for example,
-//patternScfld[3][2] = { {10, 1}, {5, 4}, {8, 2} }; would return a pattern of 10 pixels with pallet index 1, followed by 5 pixels with 
-//index 4, and 8 pixels of index 2, for a pattern with total length 23. 
+//patternScfld[3][2] = { {10, 1}, {5, 4}, {8, 2} }; would return a pattern of 10 pixels with pallet index 1, followed by 5 pixels with
+//index 4, and 8 pixels of index 2, for a pattern with total length 23.
 //NOTE you cannot return arrays in c, so you must pass in an array for the pattern you want to fill in,
 //this array must be of the correct length to match the total number of pixels in the patten.
 void PixelStrip::buildSimplePattern(byte patternScfld[][2], uint8_t patternScfldLength, byte pattern[], uint8_t patternLength){
 	int patternIndex = 0;
-	
+
 	//fill in the pattern, by steping through the patternScfld
 	//and filling sections of the returned pattern by advancing the
 	//starting index with patternIndex
@@ -1204,41 +1237,41 @@ void PixelStrip::buildSimplePattern(byte patternScfld[][2], uint8_t patternScfld
 }
 
 //takes a simple pattern and repeats it over the entire strip
-//the pattern[] is an ordered set of indexs to the pallet 
+//the pattern[] is an ordered set of indexs to the pallet
 //for example: pattern[4] {0, 1, 4, 2} paired with a pallet of {off, red, blue, green, white}
 //would produce a repeating pattern of off, red, white, blue along the strip
 //the pattern will shift done the strip for a number of cycles (numCycles), either forward or backward
-//fading in (steps) with a (wait) time between each step 
+//fading in (steps) with a (wait) time between each step
 void PixelStrip::doRepeatSimplePattern(byte pattern[], uint8_t patternLength, uint32_t pallet[], uint8_t palletLength, uint8_t wait, uint8_t steps, uint8_t numCycles, boolean forward) {
   byte localPattern[patternLength]; //a copy of the pattern, it can be shifted without changing the original pattern
   uint32_t localPatternColors[patternLength]; //array of colors used to store crossfaded color for each pixel in the pattern
   RGB palletRGB[palletLength]; //RGB version of the pallet, used for crossfading
   uint16_t startPixel;
   uint16_t nextPixel;
-  
+
   //fill in the RGB pallet using the pallet
-  makeRGBpalletFromPallet(pallet, palletRGB, palletLength); 
-  
+  makeRGBpalletFromPallet(pallet, palletRGB, palletLength);
+
   //copy the pattern into the local pattern
   for (int j = 0; j < patternLength; j++) {
 	localPattern[j] = pattern[j];
   }
-  
+
   //we want to copy the pattern along the whole strip
   //so we need to work out how many copies will fit
   //we round up, the last copy will be cut off
   int numSets = ceil( (float)numLEDs/ patternLength );
-  
+
   //set of loop variables, controls the direction of the drawing loop
   uint16_t startPoint = 0;
   int increment = 1;
-  
+
   //if we're not going forward, we want to change the loop variables so we work backwards
   if(!forward){
 	startPoint = numLEDs - 1;
-	increment = -1;  
+	increment = -1;
   }
-  
+
   //run the process for numCycles
   for (int i = 0; i < numCycles ; i++ ) {
 	stopPatternCheck(); //checks for external button presses to break the loop
@@ -1258,15 +1291,15 @@ void PixelStrip::doRepeatSimplePattern(byte pattern[], uint8_t patternLength, ui
 			//pixel to begin the next pattern at
 			//if we're running forwards, we start at 0 and add the number of pattern lengths
 			//if we're running backwards, we start at numLEDs-1 and subtract the number of pattern lengths
-			startPixel = startPoint + patternLength * k * increment; 
+			startPixel = startPoint + patternLength * k * increment;
 			for (int j = 0; j < patternLength; j++) {
 				nextPixel = startPixel + (j * increment); //next pixel to color, offset by the start pixel, in the driection of increment
-				
+
 				//break out if we run off the strip, we've drawn all the pattern copies
-				if(nextPixel > numLEDs || nextPixel < 0 ){ 
+				if(nextPixel > numLEDs || nextPixel < 0 ){
 					break;
 				}
-				
+
 				setPixelColor(nextPixel, localPatternColors[j]);
 			}
 		}
@@ -1277,9 +1310,9 @@ void PixelStrip::doRepeatSimplePattern(byte pattern[], uint8_t patternLength, ui
 	//we have finished a crossfading cycle
 	//adnace the localPattern to cycle to the next colors
 	for (int j = 0; j < patternLength; j++) {
-		localPattern[j] = pattern[ ( (i + j + 1) % patternLength ) ];	
+		localPattern[j] = pattern[ ( (i + j + 1) % patternLength ) ];
 	}
-  } 
+  }
 }
 
 //crossfades to the strip to a specified pattern
@@ -1288,7 +1321,7 @@ void PixelStrip::doRepeatSimplePattern(byte pattern[], uint8_t patternLength, ui
 //the strip crossfades to this pattern in (steps) with (wait) between each step
 void PixelStrip::crossFadePattern( byte pattern[][2], uint8_t patternLength, uint32_t pallet[], uint8_t wait, uint8_t steps) {
   uint32_t colorPattern[numLEDs];
-  for ( int i = 0; i < numLEDs; i++ ) {  
+  for ( int i = 0; i < numLEDs; i++ ) {
     colorPattern[i] = 0; //sets all the pixels to 0 (off), overwrites whatever is randomly there by default
   }
   for ( int i = 0; i < patternLength; i++ ) {
@@ -1325,16 +1358,16 @@ void PixelStrip::drawPattern( byte pattern[][2], uint8_t patternLength, uint32_t
   show();
 }
 
-//does a simpleStreamer with random colors, or one prefered color 
+//does a simpleStreamer with random colors, or one prefered color
 //passing numColors > 1 will do random of that many colors
 //pssing one will use the preferedColor\
 //see simpleStreamer for explanation of other variables
 void PixelStrip::simpleStreamerRand( byte numColors, uint32_t preferedColor, byte streamerLength, byte spacing, int32_t BgColor, boolean forward, byte numCycles, int wait){
 	byte patternLength = numColors;
-	
+
 	uint32_t pallet[ patternLength ];
 	byte pattern[ patternLength ];
-	
+
 	if(numColors == 1){
 		pattern[0] = 1;
 		pallet[0] = preferedColor;
@@ -1356,35 +1389,35 @@ void PixelStrip::simpleStreamerRand( byte numColors, uint32_t preferedColor, byt
 //BgColor is the color of the spacing (passing -1 will set it to a rainbow)
 void PixelStrip::simpleStreamer( byte pattern[], byte patternLength, uint32_t pallet[], byte streamerLength, byte spacing, int32_t BgColor, boolean forward, byte numCycles, int wait){
 	uint16_t streamSize = streamerLength + spacing; //the total streamer size including the spacing
-	
+
 	uint16_t numCyclesShift = numCycles + streamerLength; //the number of cycles needs to be offset (see below)
-	//counting variables: colorIndex determines which color to display, 
-	//nextStreamStart is the last pixel of the streamer, 
+	//counting variables: colorIndex determines which color to display,
+	//nextStreamStart is the last pixel of the streamer,
 	//nextLedOn is the next led to turn on in the strip
 	//intNextStreamStart is the starting value of nextStreamStart for each loop
 	uint8_t colorIndex;
 	int16_t nextStreamStart, nextLedOn, nextLedOff, intNextStreamStart;
 	uint32_t nextColor; //color of the next led to be on
 	uint8_t prevBrightness = getBrightness(); //need to save the current brightness
-	
+
 	//default directional values, set to the forward case
 	int8_t dirctMulti = 1; //multiplier for the direction, either forwards or backwards down the strip
 	intNextStreamStart = 0;
-	
+
 	if(!forward){
 		dirctMulti = -1;
 		intNextStreamStart = numLEDs - 1;
 	}
-	
+
 	//fill in the background for the inital streamers
 	setBackground(BgColor);
-	
+
 	//fill in the inital set of streamers (so they don't fill in during the first few cycles)
 	nextStreamStart = intNextStreamStart;
 	//run over the strip and draw as many streamers as will fit
 	//the loop limits and increments are adjusted depending on if we're going forwards or backwards
 	while( checkLimitStreamer(forward, nextStreamStart) ){
-			colorIndex = ( nextStreamStart / streamSize ) % patternLength; 
+			colorIndex = ( nextStreamStart / streamSize ) % patternLength;
 			nextColor = pallet[ pattern[colorIndex] ];
 			//fill in the streamers either starting at the strip start, or at the strip end
 			if(forward){
@@ -1394,19 +1427,19 @@ void PixelStrip::simpleStreamer( byte pattern[], byte patternLength, uint32_t pa
 			}
 			nextStreamStart += dirctMulti * streamSize;
 	}
-	show();	
-	
+	show();
+
 
 	//run for a certain number of cycles (offset by streamerLength because we draw in the intial streamer)
 	for(int i = streamerLength ; i <= numCyclesShift ; i++){
 		stopPatternCheck();
 		yield();
 		nextStreamStart = intNextStreamStart;
-		
+
 		//we need to set the brighness to max, b/c we use getPixelColor,
 		//lower brightnesses modify the color numbers, so we need everything at max to get the right values
-		setBrightness(255); 
-		
+		setBrightness(255);
+
 		//run along the strip for as meany streamSizes as possible
 		//the loop limits and increments are adjusted depending on if we're going forwards or backwards
 		//In each streamSized section we advance the onLED and turn another off
@@ -1423,7 +1456,7 @@ void PixelStrip::simpleStreamer( byte pattern[], byte patternLength, uint32_t pa
 			} else {
 				nextColor = getPixelColor(nextLedOn - dirctMulti * 1);
 			}
-			
+
 			//set the next pixel on and turn off the last pixel in the streamer
 			setPixelColor( nextLedOn , nextColor );
 			nextLedOff = nextLedOn - dirctMulti * streamerLength;
@@ -1431,7 +1464,7 @@ void PixelStrip::simpleStreamer( byte pattern[], byte patternLength, uint32_t pa
 			if(spacing > 0){
 				setBackgroundSingle( nextLedOff, BgColor );
 			}
-			
+
 			nextStreamStart += dirctMulti * (streamSize);
 		}
 		setBrightness(prevBrightness);
@@ -1448,7 +1481,7 @@ boolean PixelStrip::checkLimitStreamer(boolean forward, int16_t nextStreamStart)
 		return nextStreamStart <= numLEDs;
 	} else {
 		return nextStreamStart >= 0;
-	}	
+	}
 };
 
 //cycles a random set of color gradients across the strip
@@ -1457,10 +1490,10 @@ boolean PixelStrip::checkLimitStreamer(boolean forward, int16_t nextStreamStart)
 //patterns which don't fully fit on the segments will still work, colors will be cycled on
 //inToOut sets the direction of the cycles, either starting at the last segment or the first
 void PixelStrip::gradientCycleRand( byte numColors, byte gradSteps, uint16_t numCycles, boolean forward, int wait){
-	
+
 	uint32_t pallet[ numColors ];
 	byte pattern[ numColors ];
-	
+
 	for(int i = 0; i < numColors; i++){
 		pattern[i] = i;
 		pallet[i] = randColor();
@@ -1477,34 +1510,34 @@ void PixelStrip::gradientCycleRand( byte numColors, byte gradSteps, uint16_t num
 //forward sets the direction of the cycles, either starting at the last led or the first
 //NOTE it might be best to set the gradSteps so that they dont fit an integer number of times on the strip
 void PixelStrip::gradientCycle(byte pattern[], byte patternLength, uint32_t pallet[], byte palletLength, byte gradSteps, uint16_t numCycles, boolean forward, int wait){
-	
+
 	uint32_t color;
 	uint8_t nextPattern, currentPattern, nextLed;
 	uint8_t prevBrightness = getBrightness(); //need to save the current brightness
-	
+
 	//loop direction variables (default is last led to first)
 	int16_t endLimit = numLEDs;
 	int16_t startLimit = 0;
 	int8_t loopStep = 1;
 	int16_t firstLed = numLEDs - 1;
-	
+
 	//switch the loop variables if we want first led to last
 	if(forward){
 		endLimit = -1;
 		startLimit = numLEDs - 1;
 		loopStep = -1;
-		firstLed = 0;	
+		firstLed = 0;
 	}
-	
+
 	RGB palletRGB[palletLength]; //need to make an RGB pallet for getCrossFadeStep
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
-	
+
 	uint16_t patternCount = 0;	//tracks what how many patterns we've gone through
 
 	//inital pattern indecies, first pair of colors in the pattern
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//we need to draw the initial gradients on the strip
 	//to do this we run across all the leds
 	//every gradsteps number of leds, we rotate the gradient colors,
@@ -1518,25 +1551,25 @@ void PixelStrip::gradientCycle(byte pattern[], byte patternLength, uint32_t pall
 			currentPattern = nextPattern;
 			nextPattern = pattern[ patternCount % patternLength ];
 		}
-		
+
 		//get the crossfade between the current and next color, where the transition is gradsteps long
 		color = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], gradSteps, ( i % gradSteps ) );
 		setPixelColor( i , color );
 	}
-	
+
 	show();
 	delay(wait);
-	
+
 	//initialize loop variables for main cycle
 	patternCount = 1; //pattern count must start at 1 b/c we've already drawn the first gradient set
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//the main cycle
 	//every gradSteps we switch to the next color
 	//b/c it's hard to caculate the correct colors across the whole strip, and redraw it
 	//for each step, we set the color of the start or end pixel (depending on the motion direction)
-    //and then set the next pixel color to that of the previous pixel	
+    //and then set the next pixel color to that of the previous pixel
 	for(int i = 0; i < numCycles; i++){
 		stopPatternCheck();
 		yield();
@@ -1547,21 +1580,21 @@ void PixelStrip::gradientCycle(byte pattern[], byte patternLength, uint32_t pall
 			currentPattern = nextPattern;
 			nextPattern = pattern[ patternCount % patternLength ];
 		}
-		
+
 		//we need to use getPixelColor(), which only returns the correct color at full brightness
-		setBrightness(255);	
-	
+		setBrightness(255);
+
 		//cycle through the strip, if we're at the outer or inner led (depen on direction)
 		//set it to the next transistion step, otherwise just copy the color of the previous led
 		for(int j = startLimit; j != endLimit; j += loopStep){
 			if( j == firstLed ){
 				color = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], gradSteps, ( i % gradSteps ) );
 			} else {
-				color = getPixelColor( j + loopStep ); 
+				color = getPixelColor( j + loopStep );
 			}
 			setPixelColor( j , color );
 		}
-		
+
 		//reset the brighness and show the strip
 		setBrightness(prevBrightness);
 
@@ -1577,7 +1610,7 @@ void PixelStrip::gradientCycle(byte pattern[], byte patternLength, uint32_t pall
 void PixelStrip::patternSweepSetRand( uint8_t numRandLeds, uint32_t pallet[],  uint8_t palletLength, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int runTime){
  //initialize a randPattern, matching the pattern structure for patternSweep(), setting the length to match the number of random leds
   uint16_t randPattern[numRandLeds][3];
-  
+
   //Fill in the randPattern using the pallet
   //randPattern matches the pattern structure:
   //patterns are a y x 3 matrix where y is the number of leds numRandLeds,
@@ -1587,10 +1620,10 @@ void PixelStrip::patternSweepSetRand( uint8_t numRandLeds, uint32_t pallet[],  u
 	  if(palletLength == 1){ //pick a color index from the pallet, if the pallet is only length 1, just pick it
 		randPattern[i][2] = 0;
 	  } else if( palletLength == 0 ) { //set the pallet index for the local pattern, and choose a random color for it
-		randPattern[i][2] = i; 
+		randPattern[i][2] = i;
 		pallet[i] = randColor();
 	  } else { //the default, pick a pallet color at random for each led
-		randPattern[i][2] = random(palletLength); 
+		randPattern[i][2] = random(palletLength);
 	  }
 	  randPattern[i][1] = random(2); //choose a random direction
   }
@@ -1604,7 +1637,7 @@ void PixelStrip::patternSweepSetRand( uint8_t numRandLeds, uint32_t pallet[],  u
 //passing a trails value of 5, will do fireworks, eyesize will be the dimFactor
 //(see patternSweep for more details)
 void PixelStrip::patternSweepRand( uint8_t numRandLeds, int32_t preferedColor, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, uint8_t colorMode, int wait, int numCycles) {
-  
+
   //TODO, fix double check of preferedColor
   //initialize a pallet for passing into patternSweep()
   //if we a given a prefered color then the pallet only needs to be length 1
@@ -1616,7 +1649,7 @@ void PixelStrip::patternSweepRand( uint8_t numRandLeds, int32_t preferedColor, i
 	 palletLength = numRandLeds;
   }
   uint32_t pallet[palletLength];
-  
+
    //if a perfered color is passed in, use it otherwise we will generate the colors and pallet in patternSweepSetRand();
    if( preferedColor > -1 ){
 	  pallet[0] = preferedColor;  //since all the moving leds will be one color, the pallet can be length one
@@ -1651,21 +1684,21 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 	//patterns are a y x 3 matrix where y is the number of leds numRandLeds,
 	//each row is specified as such { led position, led color (index of pallet color), motion direction }
 	uint16_t localPattern[patternLength][3];
-  
+
 	//a quick clear if we're streaming colors, otherwise the strip is filled with a background
 	if(trails > 2) {
-		stripOff(); 
+		stripOff();
 	} else {
-		setBackground( BgColor );  
+		setBackground( BgColor );
 	};
-	
+
 	//copy the original pattern into the local pattern so that we don't modify the original
 	for (int i = 0; i < patternLength; i++) {
 		localPattern[i][0] = pattern[i][0];
 		localPattern[i][1] = pattern[i][1];
 		localPattern[i][2] = pattern[i][2];
 	}
-  
+
 	//code block below configures function to run for a set amount of time instead of cycles
 	//***************************************
 	//setup some time variables for controlling the loop
@@ -1678,29 +1711,29 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 	// while ((currentTime - startTime) < runTime) {
 		// currentTime = millis();
 		// if ((currentTime - resetTime) >= wait) {
-		  // resetTime = currentTime;  
+		  // resetTime = currentTime;
 	//********************************
-   
+
 	//variables for creating tails
 	uint16_t modAmmount = numLEDs; //needed for wrapping the trails between the start and end of the strip
 	int8_t directionArray[2]; //[direction multiplier, eyeSize]
 	int8_t directionArray2[2] = {-1, 0}; //for 2 trails case
-	
+
 	uint16_t ledLocation; //front led location
 	uint16_t trailLedLocation;
-	
-	//if we're in scanner mode, we dont want the trails to wrap, 
+
+	//if we're in scanner mode, we dont want the trails to wrap,
 	//so we want to keep the mod larger than the ledLocation can reach
 	//ie the numLEDs plus the tailLength, as this is will allow the tail to extend off the strip,
 	//which will be discarded by the setPixelColor func, as the pixel is out of bounds
-	if(scanner){ 
-		modAmmount = numLEDs + trailLength + 1; 
+	if(scanner){
+		modAmmount = numLEDs + trailLength + 1;
 	}
-	
+
 	byte percentDim = 100 / (trailLength + 1); //dim percentage so that the trail almost reaches total dimming at the trail end (+1 prevents it being off)
 	boolean lastPixel = false; //checker for if we've passed the trails end
 	uint8_t dimFactor = 100; //dynamic dim factor for creating trail
-       	
+
 	//run the particles for a certain number of cycles
 	//for each cycle, moves the leds to their next positions
 	//then sets the leds at the previous location to the BgColor (including trail ends)
@@ -1712,13 +1745,13 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 		yield();
 		//run through each of the leds in the local pattern and incement of decrement their position, wrapping where needed
 		incrementLedLocation( localPattern, patternLength, eyeSize, scanner);
-		
+
 		//if we have 3 trails or more, we are in streamer mode, so we don't touch the previous leds
-		if(trails < 3){	
+		if(trails < 3){
 			//for each led in the pattern, switch the previous led to the BgColor
 			for (int j = 0; j < patternLength; j++) {
 				ledLocation = localPattern[j][0];
-				
+
 				//get the led direction values
 				patternSweepGetLedDirection(directionArray, localPattern[j][1], trails, eyeSize);
 				//if we don't have trails, we just need to turn off the previous pixel
@@ -1726,42 +1759,42 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 				if(trails == 0){
 					trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, 1);
 					setBackgroundSingle(trailLedLocation, BgColor);
-				} else {			
+				} else {
 					trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, trailLength + 1);
-					setBackgroundSingle(trailLedLocation, BgColor);		
-						
+					setBackgroundSingle(trailLedLocation, BgColor);
+
 					 //if we have two trails, we also need switch the pixel at the end of the positive trail
 					 //note that for two trails patternSweepGetLedDirection sets a direction array for the positive trail
 					 //so we use directionArray2, which is for the negative trail
 					if(trails == 2){
 						trailLedLocation = patternSweepGetTrailLed(directionArray2, modAmmount, ledLocation, trailLength + 1);
 						setBackgroundSingle(trailLedLocation, BgColor);
-						
+
 					} else if(trails == -1){ //if the trail is reversed, we need to switch the previous pixel (b/c it's not over written by the trail)
 						trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, -1); //-1 because it's in the reverse direction to the motion
 						setBackgroundSingle(trailLedLocation, BgColor);
 					}
-					
-				}						  
+
+				}
 			}
-			
+
 			//if we have trails, draw them for each pixel in the pattern
 			if(trails != 0 ){
 				for (int j = 0; j < patternLength; j++) {
 					ledLocation = localPattern[j][0];
 					patternSweepGetLedDirection(directionArray, localPattern[j][1], trails, eyeSize);
-					
+
 					//draw a trail, extending positively or negativly along the strip, dimming with each step, wrapping according to the modAmmount
 					for( int k = 1 ; k <= trailLength ; k++){
-							
+
 						//dimming factor for the trail member, (100 is no dimming)
-						dimFactor = 100 - (percentDim * k); 
-						
+						dimFactor = 100 - (percentDim * k);
+
 						//get the led location of each trail value, with wrapping (unless we're in scanner mode)
-						trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);					
-						
+						trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);
+
 						patternSweepSetPixelColor(trailLedLocation, pallet[ localPattern[j][2] ], colorMode, dimFactor);
-						
+
 						//if we have two trails, we also need to draw the negative trail
 						//note that for two trails patternSweepGetLedDirection sets a direction array for the positive trail
 						//so we use directionArray2, which is for the negative trail
@@ -1770,11 +1803,11 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 							patternSweepSetPixelColor(trailLedLocation, pallet[ localPattern[j][2] ], colorMode, dimFactor);
 						}
 					}
-				}						  
+				}
 			}
-			
+
 		}
-		
+
 		//draw the main body of the particle (including eyesize)
 		//this is done last so that tails of other particles don't overwrite
 		for (int j = 0; j < patternLength; j++) {
@@ -1800,7 +1833,7 @@ void PixelStrip::patternSweep( uint16_t pattern[][3], uint8_t patternLength, uin
 //this was determined to be needed, b/c rainbow colors don't visually dim like single colors
 void PixelStrip::patternSweepSetPixelColor(int16_t ledLocation, uint32_t color, uint8_t colorMode, uint8_t dimFactor){
 	uint32_t colorFinal;
-	
+
 	if(ledLocation < 0){
 		return;
 	}
@@ -1824,10 +1857,10 @@ int16_t PixelStrip::patternSweepGetTrailLed(int8_t directionArray[2], uint16_t m
 }
 
 //writes into the passed directionArray
-//directionArray[0] is the led's direction multiplier 
+//directionArray[0] is the led's direction multiplier
 //directionArray[1] is the eyeSize used (only positive trails need to take account of the eyeSize)
 void PixelStrip::patternSweepGetLedDirection(int8_t directionArray[2], uint8_t ledDirection, int8_t trails, uint8_t eyeSize){
-	
+
 	//determine the type of trail, and set the direction values
 	if(trails == 2){ //two trails, this sets variables for the positive tail, the negative one is drawn seperately
 		directionArray[0] = 1;
@@ -1852,7 +1885,7 @@ void PixelStrip::patternSweepGetLedDirection(int8_t directionArray[2], uint8_t l
 			directionArray[0] = 1;
 			directionArray[1] = eyeSize;
 		}
-	}			
+	}
 }
 
 //increments the led location for all leds in a pattern, specifically for use with patternSweep functions
@@ -1865,7 +1898,7 @@ void PixelStrip::incrementLedLocation( uint16_t localPattern[][3], uint8_t patte
 			  if(scanner){
 				 localPattern[i][1] = 0;
 			  } else {
-				 localPattern[i][0] = 0; 
+				 localPattern[i][0] = 0;
 			  }
 		  } else {
 			localPattern[i][0]++ ;
@@ -1878,7 +1911,7 @@ void PixelStrip::incrementLedLocation( uint16_t localPattern[][3], uint8_t patte
 			  if(scanner){
 				localPattern[i][1] = 1;
 			  } else {
-				localPattern[i][0] = numLEDs;  
+				localPattern[i][0] = numLEDs;
 			  }
 		  } else {
 			localPattern[i][0]-- ;
@@ -1902,10 +1935,10 @@ void PixelStrip::patternSweepRainbowRand( uint8_t numRandLeds, int32_t BgColor, 
 //ex: pattern[3][2] = { {1, 0}, {5, 1}, {10, 0} } would be pixels starting at 1, and 10, moving forward, and a pixel at 5 moving backwards
 //eyeSize sets the number of additional pixels to light before dimming (0 does 1 pixel)
 void PixelStrip::patternSweepRainbow( uint16_t pattern[][2], uint8_t patternLength, int32_t BgColor, int trails, uint8_t trailLength, boolean scanner, uint8_t eyeSize, int wait, int numCycles){
-	
+
 	uint16_t localPattern[patternLength][3]; //note that the third index is never used, it exists to allow calling patternSweep
 	//if the direction of the first pixel is not 0, 1 then we will create a pattern randomly of length patternLength
-	
+
 	//copy the passed in pattern into a 3 columb pattern for patternSweep
 	for (int i = 0; i < patternLength; i++) {
 		localPattern[i][0] = pattern[i][0];
@@ -1918,15 +1951,15 @@ void PixelStrip::patternSweepRainbow( uint16_t pattern[][2], uint8_t patternLeng
 	patternSweep( localPattern, patternLength, pallet, BgColor, trails, trailLength, scanner, eyeSize, 2, wait, numCycles);
 }
 
-//does a patternSweepRepeat with random colors, or one prefered color 
+//does a patternSweepRepeat with random colors, or one prefered color
 //passing numColors > 1 will do random of that many colors
 //pssing one will use the preferedColor\
 //see patternSweepRepeat / patternSweep for explanation of other variables
 void PixelStrip::patternSweepRepeatRand(byte numColors, uint32_t preferedColor, int32_t BgColor, int trails, byte trailLength, boolean scanner, boolean direction, byte eyeSize, byte spacing, uint8_t colorMode, int wait, int numCycles ){
-	
+
 	uint32_t pallet[ numColors ];
 	byte pattern[ numColors ];
-	
+
 	if(numColors == 1){
 		pattern[0] = 1;
 		pallet[0] = preferedColor;
@@ -1947,18 +1980,18 @@ void PixelStrip::patternSweepRepeatRand(byte numColors, uint32_t preferedColor, 
 void PixelStrip::patternSweepRepeat(byte colorPattern[], byte colorPatternLength, uint32_t pallet[], int32_t BgColor, int trails, byte trailLength, boolean scanner, boolean direction, byte eyeSize, byte spacing, uint8_t colorMode, int wait, int numCycles ){
 	//total particle length, ie the strip length needed for one pariticle, it's eye, trail, and spacing
 	uint16_t totalParticalLength = eyeSize + trailLength + spacing + 1;
-	
+
 	//if we had two trails, then we need to add the extra trial length
 	if(trails == 2){
 		totalParticalLength += trailLength;
 	}
-	
+
 	//how many particles we can fit in the strip
 	uint8_t totalParticles =  ceil( float(numLEDs) / totalParticalLength ) ;
 	//uint8_t totalParticles = (numLEDs) / totalParticalLength ;
-	
+
 	uint16_t pattern[totalParticles][3];
-	
+
 	//if we're:
 		//going forwards with negative trails
 		//have two trails
@@ -1968,8 +2001,8 @@ void PixelStrip::patternSweepRepeat(byte colorPattern[], byte colorPatternLength
 	if( (trails == 1 && direction == 1) || trails == 2 || (trails == -1 && direction == 0)){
 		startOffset = eyeSize + trailLength;
 	}
-	
-	for (int i = 0; i < totalParticles; i++) {	
+
+	for (int i = 0; i < totalParticles; i++) {
 		pattern[i][0] = (i * totalParticalLength) + startOffset;//position
 		pattern[i][1] = direction; //direction
 		pattern[i][2] = colorPattern[i % colorPatternLength]; //color index
@@ -1982,8 +2015,8 @@ void PixelStrip::patternSweepRepeat(byte colorPattern[], byte colorPatternLength
 //Otherwise, uses same inputs as shooter (see shoother for details)
 void PixelStrip::shooterFixedLength( uint16_t sectionLength, uint32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, int8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles){
 	byte numSections = ceil(float(numLEDs) / (sectionLength)); //number of possible sections, rounded up to allow a partial section at the end
-	uint16_t sections[numSections][2]; //holds { start pixel, length of the section } 
-	
+	uint16_t sections[numSections][2]; //holds { start pixel, length of the section }
+
 	//the start pixel of each is i * sectionLength (totlength)
 	//if the totLength + sectionLength <= numLEDs then we still have room for a full section on the strip
 	//otherwise, we need to just use whatever length is left, given by numLEDs - totLength
@@ -1996,7 +2029,7 @@ void PixelStrip::shooterFixedLength( uint16_t sectionLength, uint32_t pallet[], 
 			sections[i][1] = numLEDs - totLength ;
 		}
 	}
-		
+
 	shooter( sections, numSections, pallet, palletLength, BgColor, spawnChance, maxNumShooters, trails, trailLength, colorMode, direction, alternating, wait, numCycles);
 }
 
@@ -2028,17 +2061,17 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 	boolean shooterActive[numSections][maxNumShooters]; //records if a shooter is active in a section
 	int8_t directionArray[2] = {0,0}; //used for patternSweepGetTrailLed();
 	boolean spawnOkTest = true; //if true, then a shooter and its trail are not within the spawn zone
-	
+
 	int16_t ledLocation, trailLedLocation; //location of the front of the current shooter, location of trail leds
 	int16_t sectionEnd, sectionStart; //end point of a given section, the start point of a given section, both are int16_t's b/c they can be subtracted from
-	//We dont want the trails to wrap into other sections, 
+	//We dont want the trails to wrap into other sections,
 	//so we want to keep the mod larger than the ledLocation can reach
 	//ie the numLEDs plus the tailLength, as this is will allow the tail to extend off the section,
 	//which will be discarded
 	int16_t modAmmount = numLEDs + trailLength + 1;
-	
-	uint8_t chance; //stores random roll for spawning 
-	
+
+	uint8_t chance; //stores random roll for spawning
+
 	//used for generating a random pallet, we don't want to modify the passed in one
 	//as a rule if color mode is 4 we generate a random pallet of length palletLength
 	//then we set color mode to 1 to pick randomly from the pallet
@@ -2051,12 +2084,12 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 			palletCopy[i] = pallet[i];
 		}
 	}
-	
+
 	//ensure that if we have no trails, we have 0 trail length
 	if(trails == 0 || trails == 3){
 		trailLength = 0;
 	}
-	
+
 	//run through the number of sections
 	//set all spawns to true, and activeShooters to false
 	//also setup direction array, if we're alternating flip the direction for each section
@@ -2074,17 +2107,17 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 			direction = !direction;
 		}
 	}
-    
+
 	//a quick clear if we're streaming colors, otherwise the strip is filled with a background
 	if(trails > 2) {
-		stripOff(); 
+		stripOff();
 	} else {
-		setBackground( BgColor );  
+		setBackground( BgColor );
 	}
 
 	byte percentDim = 100 / (trailLength + 1); //dim percentage so that the trail almost reaches total dimming at the trail end (+1 prevents it being off)
 	uint8_t dimFactor = 100; //dynamic dim factor for creating trail
-       	
+
 	//run the system for a certain number of cycles
 	//for each cycle, if a shooter can spawn, try to spawn one,
     //if a shooter is active, move it to its next positions
@@ -2102,8 +2135,8 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 			sectionEnd = sections[i][0] + sections[i][1] - 1;
 			sectionStart = sections[i][0];
 			for(int j = 0; j < maxNumShooters; j++){
-				
-				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can 
+
+				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can
 			    //spawn a new shooter
 				spawnOkTest = true;
 				for(int k = 0; k < maxNumShooters; k++){
@@ -2114,7 +2147,7 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 						}
 					}
 				}
-				
+
 				if( spawnOkTest && !shooterActive[i][j] ){
 					//try to spawn shooter
 					chance = random(100);
@@ -2126,21 +2159,21 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 						colors[i][j] = random(palletLength);
 						//if we're going forward, start the shooter at the section's first pixel
 						//otherwise we're going backwards, start it at the last pixel
-						if(directions[i] == 1){ 
+						if(directions[i] == 1){
 							shooterLocs[i][j] = sectionStart;
 						} else {
 							shooterLocs[i][j] = sectionEnd;
 						}
 					}
 			    //if the current shooter is active, incrment it and draw trails
-				} else if(shooterActive[i][j]) { 
+				} else if(shooterActive[i][j]) {
 					//we're running a pixel
 					ledLocation = shooterLocs[i][j];
-					
+
 					//if we're in streamer mode, we don't turn off any pixels, new ones just cancel old out
 					if(trails < 3){
 						directionArray[0] = -1 * directions[i]; //due to the way  patternSweepGetTrailLed() works, the direction array must be reversed
-						
+
 						//if we don't have trails, we just need to turn off the previous pixel
 						//otherwise we need to switch the pixel at the end of the trail
 						if(trails == 0){
@@ -2148,35 +2181,35 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 							setBackgroundSingle(trailLedLocation, BgColor);
 						} else {
 							trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, trailLength + 1);
-							setBackgroundSingle(trailLedLocation, BgColor);				
-						}						  
-						
+							setBackgroundSingle(trailLedLocation, BgColor);
+						}
+
 						//if we have trails, draw them for the trail length
-						if(trails != 0 ){	
+						if(trails != 0 ){
 							//draw a trail, extending positively or negativly along the strip, dimming with each step
 							for( int k = 1 ; k <= trailLength ; k++){
-								
+
 								//dimming factor for the trail member, (100 is no dimming)
-								dimFactor = 100 - (percentDim * k); 
-								
+								dimFactor = 100 - (percentDim * k);
+
 								//get the led location of each trail value, with wrapping (unless we're in scanner mode)
-								trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);	
-								
+								trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);
+
 								//if we're within the section bounds, draw the next trail led
 								if( ( trailLedLocation <= sectionEnd ) && ( trailLedLocation >= sectionStart ) ){
 									patternSweepSetPixelColor(trailLedLocation, palletCopy[ colors[i][j] ], colorMode, dimFactor);
 								}
 							}
 						}
-					}				
-					
+					}
+
 					//draw the main body of the shooter, but
 					//only if it falls within the section
 					//this is done last so that tails of other particles don't overwrite
 					if( ( ledLocation <= sectionEnd ) && ( ledLocation >= sectionStart ) ){
 						patternSweepSetPixelColor(ledLocation, palletCopy[ colors[i][j] ], colorMode, 100);
-					}	
-					
+					}
+
 					//if a shooter has reached the end of the section, plus the trail length, the shooter is now inactive, otherwise, move the shooter one step
 					//the reason why we include the trail length is to allow the trail to move off the section
 					//anything that falls outside the section won't be drawn
@@ -2185,7 +2218,7 @@ void PixelStrip::shooter( uint16_t sections[][2], byte numSections, uint32_t pal
 					} else {
 						shooterLocs[i][j] = ledLocation + directions[i];
 					}
-				}		
+				}
 			}
 		}
 		show();
@@ -2226,8 +2259,8 @@ void PixelStrip::fireworksSet( uint8_t numRandLeds, uint8_t dimFactor, uint32_t 
 	  for(int i = 0; i < (numRandLeds * 2); i = i + 2){
 		  uint32_t fireworkColor;
 		  int fireworkStart = random(1, numLEDs - 2); //pick a random starting point for each led
-		  randPattern[i][0] = fireworkStart; 
-		  randPattern[i + 1][0] = fireworkStart; 
+		  randPattern[i][0] = fireworkStart;
+		  randPattern[i + 1][0] = fireworkStart;
 		  if(palletLength == 1){ //pick a color index from the pallet, if the pallet is only length 1, just pick it
 			randPattern[i][2] = 0;
 			randPattern[i + 1][2] = 0;
@@ -2241,7 +2274,7 @@ void PixelStrip::fireworksSet( uint8_t numRandLeds, uint8_t dimFactor, uint32_t 
 		  } else {  //we're choosing from a pallet, pick a color randomly from the pallet, and dim it
 			uint8_t palletIndex = random(dimmedPalletLength);
 			randPattern[i][2] = palletIndex;
-			randPattern[i + 1][2] = palletIndex; 
+			randPattern[i + 1][2] = palletIndex;
 			fireworkColor = pallet[palletIndex];
 			dimmedPallet[palletIndex] = dimColor( fireworkColor, dimFactor );;
 		  }
@@ -2263,7 +2296,7 @@ void PixelStrip::fillSegBgGradientRGB(SegmentSet segmentSet){
 	byte segNum;
 	uint32_t color;
 	uint8_t steps = numSegs / (bgPalletStripSize - 1);
-	
+
 	//for each bgColor, (-1 because we dont want to start crossfading the last color)
 	//crossfade towards the next color in the BgPallet
 	for(int i = 0; i < (bgPalletStripSize - 1); i++){
@@ -2286,7 +2319,7 @@ uint32_t PixelStrip::getSegBgGradientColor(SegmentSet segmentSet, uint16_t segNu
 	int j = 0;
 	while( ( i + 1) * steps < segNum){
 		i++;
-	}	
+	}
 	j = segNum - (i * steps);
 	return getCrossFadeStep( bgPalletStrip[i], bgPalletStrip[ (i + 1) % bgPalletStripSize], steps, j);
 }
@@ -2297,11 +2330,11 @@ void PixelStrip::segGradientWaves(SegmentSet segmentSet, uint16_t numCycles, boo
 	uint32_t pallet[numSegs];
 	byte pattern[numSegs];
 
-	for (int i = 0; i < numSegs; i++){  
+	for (int i = 0; i < numSegs; i++){
 		pattern[i] = i;
-		pallet[i] = getSegBgGradientColor(segmentSet, i); 
+		pallet[i] = getSegBgGradientColor(segmentSet, i);
 	}
-	
+
 	waves(segmentSet, pallet, numSegs, pattern, numSegs, numCycles, inToOut, wait, steps);
 }
 
@@ -2313,10 +2346,10 @@ void PixelStrip::segGradientWaves(SegmentSet segmentSet, uint16_t numCycles, boo
 //inToOut sets the direction of the cycles, either starting at the last segment or the first
 //type sets the type of gradient function, 1 will use segGradientCycle(), 2 will use segGradientCycleSweep()
 void PixelStrip::segGradientCycleRand(SegmentSet segmentSet, byte numColors, byte gradSteps, uint16_t numCycles, boolean inToOut, uint8_t type, int wait){
-	
+
 	uint32_t pallet[ numColors ];
 	byte pattern[ numColors ];
-	
+
 	for(int i = 0; i < numColors; i++){
 		pattern[i] = i;
 		pallet[i] = randColor();
@@ -2350,13 +2383,13 @@ void PixelStrip::segGradientCycle(SegmentSet segmentSet, byte pattern[], byte pa
 			}
 		}
 	}
-	
+
 	//loop driection variables (default is last segment to first)
 	int8_t endLimit = numSegs;
 	int8_t startLimit = 0;
 	int8_t loopStep = 1;
 	int8_t firstSegment =  numSegs - 1;
-	
+
 	//switch the loop variables if we want first segment to last
 	if(!inToOut){
 		endLimit = -1;
@@ -2364,23 +2397,23 @@ void PixelStrip::segGradientCycle(SegmentSet segmentSet, byte pattern[], byte pa
 		loopStep = -1;
 		firstSegment = 0;
 	}
-	
+
 	RGB palletRGB[palletLength]; //need to make an RGB pallet for getCrossFadeStep
-	
+
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
-	
+
 	uint16_t patternCount;	//tracks what how many patterns we've gone through
 
 	//inital pattern indecies
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//we need to draw the initial gradients on the segments
 	//to do this we run across all the segments
 	//every gradsteps number of segments, we rotate the gradient colors,
 	//transitioning from the current color to the next
     for(int i = 0; i < numSegs; i++ ){
-		
+
 		//if we've gone through gradSteps cycles
 		//a color transition is finished and we need to move to the next color
 		if(i % gradSteps == 0){
@@ -2388,21 +2421,21 @@ void PixelStrip::segGradientCycle(SegmentSet segmentSet, byte pattern[], byte pa
 			currentPattern = nextPattern;
 			nextPattern = pattern[ patternCount % patternLength ];
 		}
-		
+
 		//get the crossfade between the current and next color, where the transition is gradsteps long
 		segColor = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], gradSteps, ( i % gradSteps ) );
 		fillSegColor(segmentSet, i, segColor);
 	}
-	
+
 	show();
 	delay(wait);
-	
+
 	//initialize loop variables for main cycle
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//the main cycle
-	//colors the outer or inner segment (depending on direction) to a transition color 
+	//colors the outer or inner segment (depending on direction) to a transition color
 	//between the two active colors (currentPattern, nextPattern)
 	//while also shifting the previous outer or inner color inwards or outwards respecitivly
 	//every gradSteps we switch to the next color
@@ -2418,8 +2451,8 @@ void PixelStrip::segGradientCycle(SegmentSet segmentSet, byte pattern[], byte pa
 		}
 		prevBrightness = getBrightness();
 		//we need to use getPixelColor(), which only returns the correct color at full brightness
-		setBrightness(255);	
-	
+		setBrightness(255);
+
 		//cycle through the segments, if we're at the outer or inner segment (depen on direction)
 		//set it to the next transistion step, otherwise just copy the color of the previous segment
 		for(int j = startLimit; j != endLimit; j += loopStep){
@@ -2427,12 +2460,12 @@ void PixelStrip::segGradientCycle(SegmentSet segmentSet, byte pattern[], byte pa
 				segColor = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], gradSteps, ( i % gradSteps ) );
 			} else {
 				//get color of first pixel in segment, all segment pixels are the same color
-				
+
 				segColor = getPixelColor(  firstRealPixel[j + loopStep] );  //segments[ segGroups[ j + loopStep ][0] ][1]
 			}
 			fillSegColor(segmentSet, j, segColor);
 		}
-		
+
 		//reset the brighness and show the strip
 		setBrightness(prevBrightness);
 
@@ -2450,13 +2483,13 @@ void PixelStrip::segGradientCycle2(SegmentSet segmentSet, byte pattern[], byte p
 	uint32_t segColor;
 	uint8_t nextPattern, currentPattern, nextSeg;
 	uint8_t prevBrightness = getBrightness(); //need to save the current brightness
-	
+
 	//loop driection variables (default is last segment to first)
 	int8_t endLimit = numSegs;
 	int8_t startLimit = 0;
 	int8_t loopStep = 1;
 	int8_t firstSegment =  numSegs - 1;
-	
+
 	//switch the loop variables if we want first segment to last
 	if(!inToOut){
 		endLimit = -1;
@@ -2464,9 +2497,9 @@ void PixelStrip::segGradientCycle2(SegmentSet segmentSet, byte pattern[], byte p
 		loopStep = -1;
 		firstSegment = 0;
 	}
-	
+
 	RGB palletRGB[palletLength]; //need to make an RGB pallet for getCrossFadeStep
-	
+
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
 
 	uint16_t patternCount;	//tracks what how many patterns we've gone through
@@ -2474,28 +2507,28 @@ void PixelStrip::segGradientCycle2(SegmentSet segmentSet, byte pattern[], byte p
 	//inital pattern indecies
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//used for drawing the inital gradient transitions
 	//determines how many gradients can fit across the segements
     int numRepeats = ceil( float(numSegs) / gradSteps);
-	
+
 	//initialize loop variables for main cycle
 	patternCount = 1; //pattern count must start at 1 b/c we've already drawn the first gradient set
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	byte colorPairs[numSegs][2];
 	uint16_t offSet[numSegs];
-	
+
 	for(int i = 0; i < numSegs; i++ ){
 		colorPairs[i][0] = pattern[0];
 		colorPairs[i][1] = pattern[1];
 		offSet[i] = i;
 	}
-	
-	
+
+
 	//the main cycle
-	//colors the outer or inner segment (depending on direction) to a transition color 
+	//colors the outer or inner segment (depending on direction) to a transition color
 	//between the two active colors (currentPattern, nextPattern)
 	//while also shifting the previous outer or inner color inwards or outwards respecitivly
 	//every gradSteps we switch to the next color
@@ -2510,17 +2543,17 @@ void PixelStrip::segGradientCycle2(SegmentSet segmentSet, byte pattern[], byte p
 					colorPairs[j][1] = pattern[( (i + offSet[j]) / gradSteps ) % patternLength];
 				}
 			}
-			
+
 			segColor = getCrossFadeStep( palletRGB[ colorPairs[j][0] ], palletRGB[ colorPairs[j][1] ], gradSteps, ( (offSet[j] + i) % gradSteps ) );
 			fillSegColor(segmentSet, j, segColor);
 		}
 		show();
 		delay(wait);
-		
+
 	}
 }
 
-//WARNING, does not support dummy pixels
+//WARNING, does not support dummy pixels b/c the function must get the color of each pixel to set the next
 //does a gradient sweep on the longest segment, and maps it to the other segments,
 //so you should get a gradient sweep across all segments at the same time
 void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], byte palletLength, byte gradSteps, uint16_t numCycles, boolean inToOut, int wait){
@@ -2530,15 +2563,15 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 	uint16_t pixel;
 	uint8_t nextPattern, currentPattern, nextSeg;
 	uint8_t prevBrightness = getBrightness(); //need to save the current brightness
-	
+
 	//loop driection variables (default is last segment to first)
 	int8_t endLimit = maxSegLength;
 	int8_t startLimit = 0;
 	int8_t loopStep = 1;
 	int8_t firstPixel = maxSegLength - 1;
 	int8_t firstPixelOffset;
-	
-	
+
+
 	//switch the loop variables if we want first segment to last
 	if(!inToOut){
 		endLimit = -1;
@@ -2546,23 +2579,23 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 		loopStep = -1;
 		firstPixel = 0;
 	}
-	
+
 	RGB palletRGB[palletLength]; //need to make an RGB pallet for getCrossFadeStep
-	
+
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
-	
+
 	uint16_t patternCount;	//tracks what how many patterns we've gone through
 
 	//inital pattern indecies
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//we need to draw the initial gradients on the segments
 	//to do this we run across the longest segment, and drawSegLines to color the other segments
 	//every gradsteps number of pixels, we rotate the gradient colors,
 	//transitioning from the current color to the next
 	for(int i = 0; i < maxSegLength; i++){
-		
+
 		//if we've gone through gradSteps cycles
 		//a color transition is finished and we need to move to the next color
 		if(i % gradSteps == 0){
@@ -2570,28 +2603,28 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 			currentPattern = nextPattern;
 			nextPattern = pattern[ patternCount % patternLength ];
 		}
-		
+
 		//get the crossfade between the current and next color, where the transition is gradsteps long
 		pixelColor = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], gradSteps, ( i % gradSteps ) );
 		//draw a line across all of the segments at the ith line number
 		//color mode 1 b/c we are only ever drawing a solid color
 		drawSegLineSimple(segmentSet, i, pixelColor, 1);
-		
+
 	}
-	
+
 	show();
 	delay(wait);
-	
+
 	//initialize loop variables for main cycle
 	nextPattern = pattern[ 1 ];
 	currentPattern = pattern[ 0 ];
-	
+
 	//the main cycle
-	//colors the last or first segment line (depending on direction) to a transition color 
+	//colors the last or first segment line (depending on direction) to a transition color
 	//between the two active colors (currentPattern, nextPattern)
 	//while also shifting the previous line's color to the next line
 	//every gradSteps we switch to the next color
-	for(int i = 0; i < numCycles; i++){		
+	for(int i = 0; i < numCycles; i++){
 		stopPatternCheck();
 		yield();
 		//if we've gone through gradSteps cycles
@@ -2601,11 +2634,11 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 			currentPattern = nextPattern;
 			nextPattern = pattern[ patternCount % patternLength ];
 		}
-		
+
 		prevBrightness = getBrightness();
 		//we need to use getPixelColor(), which only returns the correct color at full brightness
-		setBrightness(255);	
-	
+		setBrightness(255);
+
 		//cycle through the max length segment, if we're at the first of last pixel (dep on direction)
 		//set it to the next transistion step, otherwise just copy the color of the previous pixel
 		for(int j = startLimit; j != endLimit; j += loopStep){
@@ -2618,7 +2651,7 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 			}
 			drawSegLineSimple(segmentSet, j, pixelColor, 1);
 		}
-		
+
 		//reset the brighness and show the strip
 		setBrightness(prevBrightness);
 
@@ -2629,16 +2662,16 @@ void PixelStrip::segGradientCycleSweep(SegmentSet segmentSet, byte pattern[], by
 
 //fills a segment with a specific color
 void PixelStrip::fillSegColor(SegmentSet segmentSet, byte segNum, uint32_t color){
-	uint16_t startPixel; 
+	uint16_t startPixel;
 	int16_t length;
 	int step;
 	byte numSecs = segmentSet.getTotalNumSec(segNum);
 	//run through segment's sections, fetch the startPixel and length of each, then color each pixel
-	for(int i = 0; i < numSecs; i++){ 
+	for(int i = 0; i < numSecs; i++){
 		startPixel = segmentSet.getSecStartPixel(segNum, i);
-		length = segmentSet.getSecLength(segNum, i); 
+		length = segmentSet.getSecLength(segNum, i);
 		step = (length > 0) - (length < 0); //acount for negative lengths
-		for (int j = startPixel; j != (startPixel + length); j += step ) { 
+		for (int j = startPixel; j != (startPixel + length); j += step ) {
 		  setPixelColor( j, color );
 		}
 	}
@@ -2672,20 +2705,21 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	boolean shooterActive[numSegs][maxNumShooters]; //records if a shooter is active in a section
 	int8_t directionArray[2] = {0,0}; //used for patternSweepGetTrailLed();
 	boolean spawnOkTest = true; //if true, then a shooter and its trail are not within the spawn zone
-	
+	byte totalShootersActive = 0;
+
 	int16_t ledLocation, trailLedLocation; //location of the front of the current shooter, location of trail leds
 	int16_t sectionEnd, sectionStart; //end point of a given section, the start point of a given section, both are int16_t's b/c they can be subtracted from
-	int16_t ledSegLoc; //actual location of the led on the segment that we want to turn on / off 
-	//We dont want the trails to wrap into other sections, 
+	int16_t ledSegLoc; //actual location of the led on the segment that we want to turn on / off
+	//We dont want the trails to wrap into other sections,
 	//so we want to keep the mod larger than the ledLocation can reach
 	//ie the numLEDs plus the tailLength, as this is will allow the tail to extend off the section,
 	//which will be discarded
 	int16_t modAmmount;
-	
-	uint8_t chance; //stores random roll for spawning 
+
+	uint8_t chance; //stores random roll for spawning
 
 	ledLocation = 0;
-	
+
 	//used for generating a random pallet, we don't want to modify the passed in one
 	//as a rule if color mode is 4 we generate a random pallet of length palletLength
 	//then we set color mode to 1 to pick randomly from the pallet
@@ -2698,12 +2732,12 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			palletCopy[i] = pallet[i];
 		}
 	}
-	
+
 	//ensure that if we have no trails, we have 0 trail length
 	if(trails == 0 || trails == 3){
 		trailLength = 0;
 	}
-	
+
 	//run through the number of sections
 	//set all spawns to true, and activeShooters to false
 	//also setup direction array, if we're alternating flip the direction for each section
@@ -2721,7 +2755,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			direction = !direction;
 		}
 	}
-    
+
 	//fill the segments with the BgColor, if we're streaming turn them off (BgColor will be covered up)
 	if(trails > 2) {
 		BgColor = 0;
@@ -2730,12 +2764,12 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 		for(int j = 0; j < segmentSet.getTotalSegLength(i); j++){
 			ledSegLoc = getSegmentPixel(segmentSet, i, j);
 			setBackgroundSingle(ledSegLoc, BgColor);
-		}	
+		}
 	}
 
 	byte percentDim = 100 / (trailLength + 1); //dim percentage so that the trail almost reaches total dimming at the trail end (+1 prevents it being off)
 	uint8_t dimFactor = 100; //dynamic dim factor for creating trail
-       	
+
 	//run the system for a certain number of cycles
 	//for each cycle, if a shooter can spawn, try to spawn one,
     //if a shooter is active, move it to its next positions
@@ -2744,6 +2778,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	//then draws the new front leds
 	//this way we never overwrite front leds or trails with the BgColor
 	for(int k = 0; k <= numCycles; k++){
+		//randomSeed(random(100));
 		stopPatternCheck();
 		yield();
 		//for each section check if we can spawn a shooter, if so try to spawn one
@@ -2754,19 +2789,20 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			sectionStart = 0;
 			modAmmount = segmentSet.getTotalSegLength(i) + trailLength + 1;
 			for(int j = 0; j < maxNumShooters; j++){
-				
-				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can 
+
+				//if all the shooters trails have passed the end/start of the section (depending on direction), then we can
 			    //spawn a new shooter
 				spawnOkTest = true;
 				for(int k = 0; k < maxNumShooters; k++){
 					if(shooterActive[i][k]){
 						ledLocation = shooterLocs[i][k];
-						if( ( ledLocation >= (sectionEnd - trailLength) ) || ( ledLocation <= (sectionStart + trailLength) ) ){
+						if( ( ledLocation >= (sectionEnd - trailLength) && directions[i] == -1 ) || ( ledLocation <= (sectionStart + trailLength) && directions[i] == 1 ) ){
 							spawnOkTest = false;
+							break;
 						}
 					}
 				}
-				
+
 				//if no trails are in the spawn area, and the shooter isn't active, try to spawn a new one
 				if( spawnOkTest && !shooterActive[i][j] ){
 					//try to spawn shooter
@@ -2776,10 +2812,11 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 					if(chance <= spawnChance){
 						//spawnOk[i] = false;
 						shooterActive[i][j] = true;
+						totalShootersActive++;
 						colors[i][j] = random(palletLength);
 						//if we're going forward, start the shooter at the section's first pixel
 						//otherwise we're going backwards, start it at the last pixel
-						if(directions[i] == 1){ 
+						if(directions[i] == 1){
 							shooterLocs[i][j] = sectionStart;
 						} else {
 							shooterLocs[i][j] = sectionEnd;
@@ -2787,13 +2824,13 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 					}
 			    //if the shooter is acive, we need to increment it and draw trails
 				} else if(shooterActive[i][j]) {
-					
+
 					ledLocation = shooterLocs[i][j];
-					
+
 					//if we're in streamer mode, we don't turn off any pixels, new ones just cancel old out
 					if(trails < 3){
 						directionArray[0] = - directions[i]; //due to the way  patternSweepGetTrailLed() works, the direction array must be reversed
-						
+
 						//if we don't have trails, we just need to turn off the previous pixel
 						//otherwise we need to switch the pixel at the end of the trail
 						if(trails == 0){
@@ -2804,45 +2841,46 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 						} else {
 							trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, trailLength + 1);
 							ledSegLoc = getSegmentPixel(segmentSet, i, trailLedLocation);
-							setBackgroundSingle(ledSegLoc, BgColor);				
-						}						  
-						
+							setBackgroundSingle(ledSegLoc, BgColor);
+						}
+
 						//if we have trails, draw them for the trail length
-						if(trails != 0 ){	
+						if(trails != 0 ){
 							//draw a trail, extending positively or negativly along the strip, dimming with each step
 							for( int k = 1 ; k <= trailLength ; k++){
-								
+
 								//get the led location of each trail value, with wrapping (unless we're in scanner mode)
-								trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);	
-								
+								trailLedLocation = patternSweepGetTrailLed(directionArray, modAmmount, ledLocation, k);
+
 								//if we're within the section bounds, draw the next trail led
 								if( ( trailLedLocation <= sectionEnd ) && ( trailLedLocation >= sectionStart ) ){
 									//dimming factor for the trail member, (100 is no dimming)
-								    dimFactor = 100 - (percentDim * k); 
+								    dimFactor = 100 - (percentDim * k);
 									ledSegLoc = getSegmentPixel(segmentSet, i, trailLedLocation);
 									patternSweepSetPixelColor(ledSegLoc, palletCopy[ colors[i][j] ], colorMode, dimFactor);
 								}
 							}
 						}
-					}				
-					
+					}
+
 					//draw the main body of the shooter, but
 					//only if it falls within the section
 					//this is done last so that tails of other particles don't overwrite
 					if( ( ledLocation <= sectionEnd ) && ( ledLocation >= sectionStart ) ){
 						ledSegLoc = getSegmentPixel(segmentSet, i, ledLocation);
 						patternSweepSetPixelColor(ledSegLoc, palletCopy[ colors[i][j] ], colorMode, 100);
-					}	
-					
+					}
+
 					//if a shooter has reached the end of the section, plus the trail length, the shooter is now inactive, otherwise, move the shooter one step
 					//the reason why we include the trail length is to allow the trail to move off the section
 					//anything that falls outside the section won't be drawn
 					if( ( ledLocation > (sectionEnd + trailLength) ) || ( ledLocation < (sectionStart - trailLength) ) ){
 						shooterActive[i][j] = false;
+						totalShootersActive--;
 					} else {
 						shooterLocs[i][j] = ledLocation + directions[i];
 					}
-				}		
+				}
 			}
 		}
 		show();
@@ -2853,38 +2891,38 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 
 //crossfades segments of a strip one after another through a set of colors for a certain number of cycles, works best for ring, square, or other shapes of pixels
 //see other segment functions for notes on segments
-//the pattern is the colors that the segments will shift through, referencing the pallet ex: wavepattern[6]  = { 6, 1, 6, 1, 6, 1 };, would shift the segments 
+//the pattern is the colors that the segments will shift through, referencing the pallet ex: wavepattern[6]  = { 6, 1, 6, 1, 6, 1 };, would shift the segments
 //between pallet[1] and pallet[6]. Patterns can be as short or as long as you like, they will repeat
 //inToOut indicates whether the waves shift from the last segment to first, or visa versa.
 //BgColor sets the color of the omissions, passing -1 will set them to a rainbow
 void PixelStrip::waves( SegmentSet segmentSet, uint32_t pallet[], byte palletLength, byte pattern[], uint8_t patternLength, uint16_t numCycles, boolean inToOut, uint16_t wait, uint8_t steps){
     byte numSegs = segmentSet.numSegs;
 	RGB palletRGB[palletLength];
-	
+
 	uint32_t segColor;
 	int8_t nextPattern, currentPattern;
-	
+
 	//creates an RGB pallet from the passed in one
 	//note that it converts all colors in the pallet
 	//so watch your memory useage if you've pass in a big pallet
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
-    
+
 	uint8_t cycleStart = numCycles;
 	uint8_t cycleEnd = 0;
 	int cycleStep = -1;
-	  
+
 	if(inToOut){
 		cycleStart = 0;
 		cycleEnd = numCycles;
 		cycleStep = 1;
 	}
-	
+
 	//for the total number of cycles, crossfade each segment to the next color in steps
 	for (int k = cycleStart; k != cycleEnd; k += cycleStep) {
 		stopPatternCheck();
 	    yield();
 		for(int l = 0; l <= steps; l++){
-			for (int i = 0; i < numSegs; i++) { 
+			for (int i = 0; i < numSegs; i++) {
 				nextPattern = pattern[ (i + k + cycleStep) % patternLength ];
 				currentPattern = pattern[ (i + k) % patternLength ];
 				segColor = getCrossFadeStep( palletRGB[ currentPattern ], palletRGB[ nextPattern ], steps, l);  //select color
@@ -2894,7 +2932,7 @@ void PixelStrip::waves( SegmentSet segmentSet, uint32_t pallet[], byte palletLen
 			delay(wait);
 		}
     }
-	
+
 }
 
 //generates a random set of colors of length numColors, and passes this as a pallet/pattern to waves();\
@@ -2904,11 +2942,11 @@ void PixelStrip::waves( SegmentSet segmentSet, uint32_t pallet[], byte palletLen
 //see waves for descriptions of other variables
 void PixelStrip::randomWaves(SegmentSet segmentSet, byte numColors, byte waveThickness, byte spacing, byte numCycles, boolean inToOut, byte wait, byte steps){
 	uint32_t pallet[numColors];
-	
+
 	for(int i = 0; i < numColors; i++ ){
 		pallet[i] = randColor();
 	}
-	
+
 	simpleWaves(segmentSet, pallet, numColors, waveThickness, spacing, 0, numCycles, inToOut, wait, steps);
 }
 
@@ -2920,7 +2958,7 @@ void PixelStrip::simpleWaves(SegmentSet segmentSet, uint32_t pallet[], byte pall
 	byte totalPatternLength = palletLength * (waveSize);
 	byte pattern[totalPatternLength]; //pattern for waves()
 	byte currentPatternIndex = 0;
-	
+
 	//waves() just takes a pallet, so we need to make a new pallet that includes the BgColor
 	//the BgColor is placed at the end of the pallet
 	uint32_t palletWithBg[palletLength + 1];
@@ -2928,8 +2966,8 @@ void PixelStrip::simpleWaves(SegmentSet segmentSet, uint32_t pallet[], byte pall
 		palletWithBg[i] = pallet[i];
 	}
 	palletWithBg[palletLength] = BgColor;
-	
-	//we need to fill in the pattern 
+
+	//we need to fill in the pattern
 	//run through the pallet, and for each color, fill in a wavethickness portion of the pattern
 	//and then a spacing thickness portion of the pattern with the BgColor
 	//everytime we fill in part of the pattern, we advance currentPatternIndex
@@ -2938,13 +2976,13 @@ void PixelStrip::simpleWaves(SegmentSet segmentSet, uint32_t pallet[], byte pall
 			pattern[currentPatternIndex] = i;
 			currentPatternIndex++;
 		}
-		
+
 		for(int k = 0; k < spacing ; k++){
 			pattern[currentPatternIndex] = palletLength;
 			currentPatternIndex++;
 		}
 	}
-	
+
 	waves( segmentSet, palletWithBg, palletLength + 1, pattern, totalPatternLength, numCycles, inToOut, wait, steps);
 }
 
@@ -2964,7 +3002,7 @@ void PixelStrip::singleWave( SegmentSet segmentSet, uint32_t waveColor, uint32_t
   uint32_t pallet[2] = {BgColor, waveColor};
   waves( segmentSet, pallet, 2, pattern, numSegs, numCycles, inToOut, wait, steps );
  }
- 
+
 //a combination of rainbow and wave functions, builds a rainbow pattern based on the number of segments and then cycles it
 void PixelStrip::rainbowWave( SegmentSet segmentSet, uint8_t numCycles, boolean inToOut, uint8_t wait, uint8_t steps) {
   byte numSegs = segmentSet.numSegs;
@@ -2976,7 +3014,7 @@ void PixelStrip::rainbowWave( SegmentSet segmentSet, uint8_t numCycles, boolean 
   }
   waves( segmentSet, pallet, numSegs, pattern, numSegs, numCycles, inToOut, wait, steps );
  }
- 
+
 //does a similar thing to waves(), but cycles through the rainbow
 //waveThickness sets the number of segments illuminated at once, (useful on pixels arranged in shapes)
 //shiftFactor determines how fast you go step through the rainbow
@@ -3015,7 +3053,7 @@ void PixelStrip::rainbowSingleWave( SegmentSet segmentSet, uint8_t waveThickness
 	 }
 	 fadingWaves(segmentSet, pallet, numColors, pattern, numColors, totalFadeLength, spacing, inToOut, numCycles, wait, steps);
  }
- 
+
  //does a set of waves where the color fades in fadelength steps
  //this is fairly memory intensive, as a color is created for each fade step, for each color in the pattern
  //for a less memory intensive alternative, use sonarWaves
@@ -3024,24 +3062,24 @@ void PixelStrip::fadingWaves( SegmentSet segmentSet, uint32_t pallet[], byte pal
 	int numColors = totalFadeLength * patternLength;
 	int fadeAndSpacingLength = (totalFadeLength + spacing);
 	int totalPatternLength = patternLength * fadeAndSpacingLength;
-	uint32_t wavePallet[numColors + 1]; 
+	uint32_t wavePallet[numColors + 1];
 	wavePallet[numColors] = 0;
 	uint8_t wavePattern[totalPatternLength];
 	int adjIndex = 0;
-	
+
 	for(int i = 0; i < patternLength; i++){
 		for(int j = 0; j < totalFadeLength; j++){
 			adjIndex = j;
 			//if we're going from the last segment to the first, we need to draw the fade in the reverse direction
 			if(direct){ adjIndex = totalFadeLength - 1 - j;}
-			wavePallet[i * totalFadeLength + j] = desaturate( pallet[pattern[i]] , (adjIndex * 100) / (totalFadeLength - 1) );// getCrossFadeStep( palletRGB[ pattern[i] ], BgColorRGB, totalFadeLength -1, j);//; 
+			wavePallet[i * totalFadeLength + j] = desaturate( pallet[pattern[i]] , (adjIndex * 100) / (totalFadeLength - 1) );// getCrossFadeStep( palletRGB[ pattern[i] ], BgColorRGB, totalFadeLength -1, j);//;
 			wavePattern[i * fadeAndSpacingLength + j] = i * totalFadeLength + j;
 		}
 		for(int j = totalFadeLength; j < fadeAndSpacingLength; j++){
 			wavePattern[i * fadeAndSpacingLength + j] = numColors;
 		}
 	}
-	
+
 	waves( segmentSet, wavePallet, numColors + 1, wavePattern, totalPatternLength, numCycles, direct, wait, steps );
 }
 
@@ -3055,7 +3093,7 @@ void PixelStrip::fadingWaves( SegmentSet segmentSet, uint32_t pallet[], byte pal
 	 }
 	 sonarWaves( segmentSet, pallet, numColors, pattern, numColors, BgColor, totalFadeLength, spacing, inToOut, alternate, bounce, bounceChange, numCycles, wait);
  }
- 	
+
  //does a set of waves where the color fades in fadelength steps
  //takes a set of colors in a pattern (using pallet as the colors) and will do a wave of each color in order
  //as many waves as possible will be fit onto the segmentSet at once,
@@ -3073,14 +3111,14 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	int8_t totalSpace = (numSimultWaves * (totalFadeLength + spacing)); //total space taken up by all the active waves (can be > numSegs)
 	uint8_t nextPalletIndex; //placeholder for next color for a wave
 	int kTemp = 0;
-	
+
 	//populate activeWavePos matrix array for the initally active waves
 	for(int i = 0; i < numSimultWaves; i++){
 		activeWavePos[i][0] = i % palletLength; //wave color
 		//set vars depending on if we're going forward or backward, or alternating
 		if(direct || (alternate && (i % 2 != 0))){
 			//place the head of the waves, starting at the end of the segmentSet, we need to draw the first wave part way along the segments
-			activeWavePos[i][1] = totalSpace - 1 - i * (totalFadeLength + spacing); 
+			activeWavePos[i][1] = totalSpace - 1 - i * (totalFadeLength + spacing);
 			activeWavePos[i][2] = 1; //set direction increment positive
 			startDirect[i] = 1; //initial wave direction
 			if(numSimultWaves == 1){ //if we just have one wave, we'll start it at the beginning of the segments for looks
@@ -3095,18 +3133,18 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			}
 		}
 	}
-	
+
 	RGB palletRGB[palletLength];
 	RGB BgColorRGB = makeRGBFromColor(BgColor);
-	
+
 	uint32_t segColor;
-	
+
 	//creates an RGB pallet from the passed in one
 	//note that it converts all colors in the pallet
 	//so watch your memory useage if you've pass in a big pallet
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
 
-	
+
 	//for eqch cycle, draw all the waves and fades, then determine the next wave position change color if needed
 	for (int i = 0; i <= numCycles; i++) {
 		stopPatternCheck();
@@ -3117,7 +3155,7 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 			dimStrip();
 		}
 			//for each wave, draw the trail, increment the wave head postion, and change colors if needed
-			for (int j = 0; j < numSimultWaves; j++) { 
+			for (int j = 0; j < numSimultWaves; j++) {
 				for(int k = 0; k < totalFadeLength; k++){
 					wavePos = (activeWavePos[j][1] - k * activeWavePos[j][2]);
 					if(!bounce){
@@ -3130,7 +3168,7 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 					//fill the segment with a faded trail (totalFadeLength - 1, makes the color do to the BgColor on the last step)
 					//kTemp = k;
 					//if(k > 0 ){ kTemp++; }
-					//segColor = desaturate( pallet[ activeWavePos[j][0] ] , (100 - k * 100) / (totalFadeLength -1) ); 
+					//segColor = desaturate( pallet[ activeWavePos[j][0] ] , (100 - k * 100) / (totalFadeLength -1) );
 				    segColor = getCrossFadeStep( palletRGB[ activeWavePos[j][0] ], BgColorRGB, totalFadeLength - 1, k);
 					if( k > 0 ){ segColor = dimColor(segColor, 1); }; //real quick, dirty way to make the trails dim more dramatically, replace this with HSV dimming later
 					fillSegColor(segmentSet, wavePos, segColor);
@@ -3151,7 +3189,7 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 						activeWavePos[j][2] = 1;
 						//if the wave started at then first segment, change it's color
 						if(startDirect[j] == 1 || bounceChange){
-						   activeWavePos[j][0] = nextPalletIndex;				
+						   activeWavePos[j][0] = nextPalletIndex;
 						}
 					}
 				} else{
@@ -3166,45 +3204,48 @@ void PixelStrip::sonarWaves( SegmentSet segmentSet, uint32_t pallet[], byte pall
 		delay(wait);
     }
 }
- 
+
 //rotates a pattern across segments at the same time
 //useful for pixels arranged in shapes (esp circles)
 //a pattern might looks like:
-// byte spinPattern[(5 + 2) * 2] = { 
-   // 0, 5, 4, 1, 4, 1, 4, 
-   // 5, 11, 1, 4, 1, 4, 1,    
+// byte spinPattern[(5 + 2) * 2] = {
+   // 0, 5, 4, 1, 4, 1, 4,
+   // 5, 11, 1, 4, 1, 4, 1,
 // };
 //where the first two indexs of each line are the pattern start and end points on the longest segment
 //the remaining numbers on each line are pallet color references for each segment
 //you must provide pallet references for all segments
 //spin patterns will probably only work for a specific segment set, so make sure you are careful when calling the function
 //repeat (true) will repeat the pattern along the segements as many times as possible, if an even number of patterns doesn't fit onto the strip, the extra will be rotated on/off the strip
+//in repeat mode, the background will be the zeroth index of the pallet, background color modes still work
 //EXTRA NOTES:
 //BgColor Modes:
-		//-1 does a rainbow
-		//-3 does the BgGradient
-		//-4 does the segmented BgGradient
-//Color modes are as follows: 
-	//mode 1: just solid color
+		//they match color modes, but you input a neg number for bgColor
+		//ie BgColor = -2 ==> mode 2: rainbow spread across the longest segment
+		//if you just want a solid background, just pass in a color;
+//Color modes are as follows:
+	//mode 1: colors match pattern
 	//mode 2: rainbow spread across the longest segment
 	//mode 3: use the bgSeg gradient
 	//mode 4: use the non segmented BgGradient
+	//mode 5; rainbow spread across all segments
+	//mode 6: rainbow spread across whole strip
 //ISSUES:
 	//dimming is incompatible with different BgColors, and repeating
     //you can change the code here and in drawSegLine to do a rainbow on a pixel by pixel basis, but it may lag
 void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], int32_t BgColor, uint8_t colorMode, boolean repeat, int numCycles, int wait ){
-    
+
 	byte numSegs = segmentSet.numSegs;
 	//rewrites the spinPattern array into a better representaion
 	//ie, two 2d arrays, one with the pattern lengths, and one with the patterns
-	//ie { 0, 5, 4, 1, 4, 1, 4, } <--row of original spinPattern goes to {0, 5} (spinPatternLengths) and { 4, 1, 4, 1, 4, } (spinPatternPatterns) 
+	//ie { 0, 5, 4, 1, 4, 1, 4, } <--row of original spinPattern goes to {0, 5} (spinPatternLengths) and { 4, 1, 4, 1, 4, } (spinPatternPatterns)
 	//index's of the pattern lengths and the patterns are the same
 	byte patternSecLength = (numSegs + 2); //length of each pattern (the start and end points and the pallet index's for each segment)
 	uint8_t numPatterns = spinPatternLength / patternSecLength; //how many  patterns we have
 	byte spinPatternLengths[numPatterns][2]; //array of pattern lengths
 	byte spinPatternPatterns[numPatterns][numSegs]; //array of patterns
 	byte colorModeBg = 1;
-	
+
 	//copy the orignial spinPattern into two seperate arrays
 	for(int i = 0; i < numPatterns; i++){
 		for(int j = 0; j < 2; j++ ){
@@ -3214,11 +3255,11 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 		  spinPatternPatterns[i][k] = spinPattern[i * patternSecLength + k + 2];
 		}
 	}
-	
+
 	//find the maximum segment length
 	uint16_t maxSegLength = segmentSet.maxSegLength;
-	
-	//in repeat mode, the pattern is repeated across the segments 
+
+	//in repeat mode, the pattern is repeated across the segments
 	//the mmodAmount determines when the pattern will start to wrap
 	//for repeat patterns we want as many as possible on the strip, overflowing if needed
 	//the total pattern length is taken as the last pattern length index
@@ -3233,7 +3274,7 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
     } else {
 		//if the spin pattern is longer than the segment, we still want to draw the whole thing
 		//so we'll use the pattern length as the mod amount
-		//otherwise we'll just use the longest segment length 
+		//otherwise we'll just use the longest segment length
 		if(spinPatternLengths[numPatterns - 1][1] > maxSegLength) {
 			totalPatternLength = spinPatternLengths[numPatterns - 1][1];
 		} else {
@@ -3241,30 +3282,36 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 		}
 		modAmount = totalPatternLength;
 	}
-	
+
 	//map the BgColor to the correct color mode for drawSimpleLine
 	switch(BgColor){
-		case -1: 
+		case -2:
 			colorModeBg = 2;
 			break;
-		case -3: 
-			colorModeBg = 4;
-			break;
-		case -4: 
+		case -3:
 			colorModeBg = 3;
 			break;
+		case -4:
+			colorModeBg = 4;
+			break;
+		case -5:
+			colorModeBg = 5;
+			break;
+		case -6:
+			colorModeBg = 6;
+		    break;
 		default:
 			colorModeBg = 1;
 	}
-	
+
 	//fill in initial background
 	for(int i = 0; i < maxSegLength; i++){
 		drawSegLineSimple( segmentSet, i, BgColor, colorModeBg);
 	}
-	
+
 	uint16_t nextLineOn;
 	uint16_t nextLineOff;
-	
+
 	uint8_t repeatCount = 0;
 	//draw an initial pattern, this means the pattern is already draw when the motion starts,
 	//so it doesn't have to fill itself in
@@ -3275,18 +3322,14 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 				if(nextLineOn > maxSegLength - 1){
 					continue;
 				}
-				if( colorMode != 1 ){  //change this code if you want a pixel by pixel rainbow
-				  drawSegLineSimple( segmentSet, nextLineOn, 0, colorMode);
-				} else {
-				  drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[i], pallet);
-				}			
+			    drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[i], pallet, colorMode, colorModeBg, true);
 			}
 		}
 		repeatCount += totalPatternLength;
 	}while( repeatCount < maxSegLength);
 	show();
-	
-	//draw patterns for a number of cycles, shifting forward by one each time, 
+
+	//draw patterns for a number of cycles, shifting forward by one each time,
 	for(int i = 0; i <= numCycles; i++){
 		stopPatternCheck();
 	    yield();
@@ -3294,7 +3337,7 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 		do{ //if we haven't reached the out maximum length we draw another pattern
 			if(!repeat){ //if we're in repeat mode, we don't need to fill in the background b/c the pattern is repeated
 				for(int j = 0; j < numPatterns; j++ ){ //turn off the lines for all the patterns, this lets on lines overwrite off ones if needed (line when two lines are consecutive)
-					nextLineOff = ( spinPatternLengths[j][0] + i - 1 ) % modAmount; //we start at the tail of each pattern: spinPatternLengths[j][0]  
+					nextLineOff = ( spinPatternLengths[j][0] + i - 1 ) % modAmount; //we start at the tail of each pattern: spinPatternLengths[j][0]
 					//if we have a pattern longer than the strip, part of it will be cut off, we don't try to draw it
 					if(nextLineOff > maxSegLength - 1){
 						continue;
@@ -3308,13 +3351,9 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 				if(nextLineOn > maxSegLength - 1){
 					continue;
 				}
-				if( colorMode != 1 ){  //change this code if you want a pixel by pixel rainbow
-				  drawSegLineSimple( segmentSet, nextLineOn, 0, colorMode);
-				} else {
-				  drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[j], pallet);
-				}				
+				drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[j], pallet, colorMode, colorModeBg, repeat );
 			}
-		repeatCount += totalPatternLength; 
+		repeatCount += totalPatternLength;
 		}while( repeatCount < maxSegLength);
 		show();
 		delay(wait);
@@ -3324,21 +3363,70 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 //draws a line between segments, does its best to make a straight line
 //the segment colors follow the provided pattern of pallet indecies
 //the pattern length must match the number of segments
-void PixelStrip::drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[]){
+void PixelStrip::drawSegLine(SegmentSet segmentSet, byte lineNum, byte Pattern[], uint32_t pallet[], uint8_t colorMode, uint8_t bgColorMode, boolean brReplace){
 	byte numSegs = segmentSet.numSegs;
-	drawSegLineSection(segmentSet, 0, numSegs - 1, lineNum, Pattern, pallet);
+	drawSegLineSection(segmentSet, 0, numSegs - 1, lineNum, Pattern, pallet, colorMode, bgColorMode, brReplace);
 }
 
 //draws a line between segments, from startSeg to endSeg (including endSeg), does its best to make a straight line
 //the segment colors follow the provided pattern of pallet indecies
 //the pattern length must match the number of segments!
-void PixelStrip::drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[]){
+//if brReplace is true, any part of the pattern with a value of zero (ie first element in the pallet) will be treated as a background colored pixel
+//and will use bgColorMode for it's color mode (same modes as colorMode)
+//if you don't want this, set brReplace to false
+//Color modes are as follows:
+//mode 2: rainbow spread across the longest segment
+//mode 3: use the bgSeg gradient
+//mode 4: use the non segmented BgGradient
+//mode 5; rainbow spread across all segments
+//mode 6: rainbow spread across whole strip
+void PixelStrip::drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endseg, byte lineNum, byte Pattern[], uint32_t pallet[], uint8_t colorMode, uint8_t bgColorMode, boolean brReplace){
 	uint16_t maxSegLength = segmentSet.maxSegLength;
 	int16_t pixelNum = 0;
+	uint32_t colorFinal = 0;
+	uint8_t colorModeTemp = colorMode;
 	for(int i = startSeg; i <= endseg; i++) {  //for each segment
-		pixelNum = getSegmentPixel(segmentSet, i, (uint16_t(lineNum) * uint16_t(segmentSet.getTotalSegLength(i)) / maxSegLength) );
-		setPixelColor( pixelNum, pallet[ Pattern[i] ] );	
-	}	
+	    colorModeTemp = colorMode;
+	    pixelNum = getPixelNumFromLineNum(segmentSet, maxSegLength, i, lineNum);
+		if(brReplace && Pattern[i] == 0){
+			colorModeTemp = bgColorMode;
+		}
+		if(colorModeTemp > 1){
+			colorFinal = drawSegLineExtraColorModes(segmentSet, maxSegLength, pixelNum, lineNum, i, colorModeTemp);
+		} else {
+			colorFinal = pallet[ Pattern[i] ];
+		}
+		setPixelColor( pixelNum , colorFinal );
+	}
+}
+
+//retuns the pixel number located on segment segNum located along line lineNum where the total number of lines matches the pixels in the longest segment
+//in other words, will return a pixel such that you can draw a straight line accross all segments, using the longest segment as the basis
+int16_t PixelStrip::getPixelNumFromLineNum(SegmentSet segmentSet, uint16_t maxSegLength, uint8_t segNum, byte lineNum){
+	return getSegmentPixel(segmentSet, segNum, (uint16_t(lineNum) * uint16_t(segmentSet.getTotalSegLength(segNum)) / maxSegLength) );
+}
+
+//Color modes are as follows:
+//mode 2: rainbow spread across the longest segment
+//mode 3: use the bgSeg gradient
+//mode 4: use the non segmented BgGradient
+//mode 5; rainbow spread across all segments
+//mode 6: rainbow spread across whole strip
+uint32_t PixelStrip::drawSegLineExtraColorModes(SegmentSet segmentSet, uint16_t maxSegLength, int16_t pixelNum, byte lineNum, uint8_t segNum, uint8_t colorMode){
+	uint32_t colorFinal = 0;
+	byte numSegs = segmentSet.numSegs;
+	if(colorMode == 2){ //colors each line according to a rainbow mapped to the longest segment
+		colorFinal = Wheel((lineNum * 256 / maxSegLength) & 255);
+	} else if(colorMode == 3) { //colors each line to match the BgGradient segmented
+		colorFinal = getSegBgGradientColor(segmentSet, segNum);
+	} else if( colorMode == 4){ //colors each line to match the BgGradient
+		colorFinal = getBgGradientColor( pixelNum );
+	} else if( colorMode == 5 ){ //colors each line according to a rainbow spread across all segments
+		colorFinal = Wheel((segNum * 256 / numSegs) & 255);
+	} else if( colorMode == 6 ){ //colors each line according to a rainbow spread across whole strip
+		colorFinal = Wheel((pixelNum * 256 / numLEDs) & 255);
+	}
+	return colorFinal;
 }
 
 //finds the pixel number of the pixel at a given position in a segment
@@ -3346,7 +3434,7 @@ void PixelStrip::drawSegLineSection(SegmentSet segmentSet, uint8_t startSeg, uin
 //if the segment is in the reverse direction we want the pixel for the end of the segment
 int16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t num){
 	// num is the index of the pixel in the segment and is 0 based
-	// segmentNum index of the segement in the segment array 
+	// segmentNum index of the segement in the segment array
 	boolean segDirection = segmentSet.getSegDirection(segNum);
 	uint16_t numSec = segmentSet.getTotalNumSec(segNum);
 	uint16_t count = 0;
@@ -3354,12 +3442,12 @@ int16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t
 	int16_t secLength;
 	uint16_t AbsSecLength;
 	int secLengthSign;
-	
+
 	//counting loop setup variables, the default is a ascending segment, so we count forward
 	int16_t step = 1;
 	int16_t endLimit = numSec;
 	int16_t startLimit = 0;
-	
+
 	//if the segment is decending, we want to count backwards, so we change the loop variables
 	if( !segDirection ){
 		step = -1;
@@ -3373,28 +3461,28 @@ int16_t PixelStrip::getSegmentPixel(SegmentSet segmentSet, byte segNum, uint16_t
 	for(int i = startLimit; i != endLimit; i += step){
 		secLength = segmentSet.getSecLength(segNum, i); //sec length can be negative
 		secLengthSign = (secLength > 0) - (secLength < 0);
-		AbsSecLength = abs(secLength); 
+		AbsSecLength = abs(secLength);
 		prevCount = count;
 		count += AbsSecLength ; //always add a positive sec length, we want to know the physical length of each section
 
 		//if the count is greater than the number we want (num always starts at 0, so secLength will always be one longer than the max num in the section)
-		//the num'th pixel is in the current segment.  
+		//the num'th pixel is in the current segment.
 		//for ascending segments:
 		//we add the difference between how many pixel's we've counted
 		//and how many we want (ie num - prevCount) to the section's starting pixel
 		//for descending segments:
 		//we add the section length and subtract the difference (num - prevCount) - 1
-		
+
 		//unless the secLength is 1, then it's just the start pixel
 		if( count > num ){
 			if( secLength == 1 ){
-				return segmentSet.getSecStartPixel(segNum, i); 
+				return segmentSet.getSecStartPixel(segNum, i);
 			} else if(segDirection) {
-				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * (num - prevCount) ); 
+				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * (num - prevCount) );
 			} else {
-				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * ( AbsSecLength - (num - prevCount) - 1) ) ; 
+				return (segmentSet.getSecStartPixel(segNum, i) + secLengthSign * ( AbsSecLength - (num - prevCount) - 1) ) ;
 			}
-			
+
 		}
 	}
 }
@@ -3412,9 +3500,9 @@ void PixelStrip::colorSpinSimple( SegmentSet segmentSet, byte numColors, int32_t
 			 for(int i = 0; i < numColors; i++ ){
 				pattern[i] = i;
 				pallet[i] = randColor();
-			 } 
+			 }
 		 } else {  //one color, use it
-			 pattern[0] = 0;
+			 pattern[0] = 1;
 			 pallet[0] = prefColor;
 			 patternMode = 0;  //only pattern mode 0 makes sense for a single color
 		 }
@@ -3434,22 +3522,23 @@ void PixelStrip::colorSpinSimple( SegmentSet segmentSet, byte numColors, int32_t
 //			   0 : the default, each sweep is a solid color from the pattern
 //			   1 : each sweep is the same, the pattern is copied down each sweep
 //			   2 : like 1, but the pattern is shifted for each subsequent sweep
-//Color modes are as follows: 
+//Color modes are as follows:
 	//mode 1: just solid color
-	//mode 2: rainbow spread across the longest segment
-	//mode 3: use the bgSeg gradient
+    //mode 2: rainbow spread across the longest segment
+    //mode 3: use the bgSeg gradient
 	//mode 4: use the non segmented BgGradient
-	//mode 5: rainbow spread across all segments
+	//mode 4; rainbow spread across all segments
+	//mode 6: rainbow spread across whole strip
 void PixelStrip::colorSpinSimpleSet( SegmentSet segmentSet, byte pattern[], byte patternLength, uint32_t pallet[], int32_t BgColor, byte sweepLength, int numSweeps, byte sweepSpacing, byte patternMode, byte colorMode, int numCycles, int wait ){
     byte numSegs = segmentSet.numSegs;
-	
+
 	uint16_t maxSegLength = segmentSet.maxSegLength;
-	
+
 	uint8_t numSweepsDrawn;
-	if( numSweeps < 0){ 
+	if( numSweeps < 0){
 	//if we want to turn on repeat mode, we don't actually want to use the colorSpin repeat, because we can't easily have a Bg
 	//instead we will create our own repeat by filling in a sweep + spacing for all the colors in the pattern, repeating if needed
-	
+
 		//if drawing all the patterns (and spacing) is longer than the max seg, we draw one sweep for each color
 		//otherwise, we draw sweeps until we fill up the longest segment
 		if( (patternLength * (sweepLength + sweepSpacing) ) > maxSegLength){
@@ -3462,11 +3551,11 @@ void PixelStrip::colorSpinSimpleSet( SegmentSet segmentSet, byte pattern[], byte
 	}
 
 	uint8_t patternSecLength = (numSegs + 2); //length of each pattern (the start and end points and the pallet index's for each segment)
-	
+
 	//setup our own spinPattern
 	uint8_t spinPatternLength = patternSecLength * numSweepsDrawn;
 	byte spinPattern[ spinPatternLength ];
-	
+
 	byte patternIndexOn;
 	//copy the spinPattern, and fill in the color pattern
 	for(int i = 0; i < numSweepsDrawn; i++){
@@ -3499,37 +3588,31 @@ void PixelStrip::colorSpinSimpleSet( SegmentSet segmentSet, byte pattern[], byte
 //draws a segment line of one color, does not need a pallet or pattern, passing -1 as the color will do a rainbow based on the Wheel() function
 void PixelStrip::drawSegLineSimple(SegmentSet segmentSet, byte lineNum, uint32_t color, uint8_t colorMode){
 	byte numSegs = segmentSet.numSegs;
-	drawSegLineSimpleSection(segmentSet, 0, numSegs - 1, lineNum, color, colorMode);	
+	drawSegLineSimpleSection(segmentSet, 0, numSegs - 1, lineNum, color, colorMode);
 }
 
 //draws a segment line of one color betweeb startSeg and endSeg (including endSeg)
 //does not need a pallet or pattern,
-//Color modes are as follows: 
+//Color modes are as follows:
 	//mode 1: just solid color
 	//mode 2: rainbow spread across the longest segment
 	//mode 3: use the bgSeg gradient
 	//mode 4: use the non segmented BgGradient
 	//mode 5: rainbow spread across all segments
+	//mode 6: rainbow spread across whole strip
 void PixelStrip::drawSegLineSimpleSection(SegmentSet segmentSet, uint8_t startSeg, uint8_t endSeg, byte lineNum, uint32_t color, uint8_t colorMode){
-	byte numSegs = segmentSet.numSegs;
 	uint16_t maxSegLength = segmentSet.maxSegLength;
 	int16_t pixelNum = 0;
 	uint32_t colorFinal = color;
 	for(int i = startSeg; i <= endSeg; i++) {  //for each segment, set the color, if we're in rainbow mode, set the rainbow color
-		pixelNum = getSegmentPixel( segmentSet, i, (uint16_t(lineNum) * uint16_t(segmentSet.getTotalSegLength(i)) / maxSegLength) );
-		if(colorMode == 2){ //colors each line according to a rainbow mapped to the longest segment
-		
-		  colorFinal = Wheel((lineNum * 256 / maxSegLength) & 255);
-		} else if(colorMode == 3) { //colors each line to match the BgGradient segmented
-		  colorFinal = getSegBgGradientColor(segmentSet, i);
-		} else if( colorMode == 4){ //colors each line to match the BgGradient
-		  colorFinal = getBgGradientColor( pixelNum );
-		} else if( colorMode == 5 ){ //colors each line according to a rainbow spread across all segments
-		  colorFinal = Wheel((i * 256 / numSegs) & 255);
+		pixelNum = getPixelNumFromLineNum(segmentSet, maxSegLength, i, lineNum);
+		if(colorMode > 1){
+			colorFinal = drawSegLineExtraColorModes(segmentSet, maxSegLength, pixelNum, lineNum, i, colorMode);
 		}
 		setPixelColor( pixelNum , colorFinal );
 	}
 }
+
 
 //fairly experimental and unpredictable
 //takes a given spiral pattern and fills it in with a set of colors
@@ -3537,10 +3620,10 @@ void PixelStrip::drawSegLineSimpleSection(SegmentSet segmentSet, uint8_t startSe
 //a spiral pattern looks like:
 // spinPattern4[(5 + 2) * 5] = {
    // 0, 2, 4, 0, 0, 0, 0,
-   // 2, 3, 0, 4, 0, 0, 0, 
-   // 3, 4, 0, 0, 4, 0, 0, 
-   // 4, 5, 0, 0, 0, 4, 0, 
-   // 5, 6, 0, 0, 0, 0, 4,     
+   // 2, 3, 0, 4, 0, 0, 0,
+   // 3, 4, 0, 0, 4, 0, 0,
+   // 4, 5, 0, 0, 0, 4, 0,
+   // 5, 6, 0, 0, 0, 0, 4,
 // };
 //where the "4"'s are filled in by this function
 //NOTE that spirals makes a copy of the spinPattern, this might take up too much memory
@@ -3551,12 +3634,12 @@ void PixelStrip::drawSegLineSimpleSection(SegmentSet segmentSet, uint8_t startSe
 //note that the colorPallet must be numSegs long
 void PixelStrip::spiralsSet( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, uint32_t pallet[], byte colorPattern[], int numCycles, int wait ){
 	byte numSegs = segmentSet.numSegs;
-	
+
 	byte spinPatternCopy[ (numSegs + 2) * spinPatternLength];
-	
+
 	byte patternSecLength = (numSegs + 2); //length of each pattern (the start and end points and the pallet index's for each segment)
 	uint8_t numPatterns = spinPatternLength / patternSecLength; //how many  patterns we have
-	
+
 	//copy the spinPattern, and fill in the color pattern
 	for(int i = 0; i < numPatterns; i++){
 		spinPatternCopy[i * patternSecLength] = spinPattern[i * patternSecLength];
@@ -3571,7 +3654,7 @@ void PixelStrip::spiralsSet( SegmentSet segmentSet, byte spinPattern[], uint8_t 
 			// }
 			//spinPatternCopy[(numPatterns - 1) * patternSecLength + numSegs + 1]	= colorPattern[ 0 ];
 		//}
-    } 
+    }
     colorSpin( segmentSet, spinPatternCopy, spinPatternLength, pallet, 0, 1, true, numCycles, wait );
 }
 
@@ -3585,11 +3668,11 @@ void PixelStrip::spiralsSet( SegmentSet segmentSet, byte spinPattern[], uint8_t 
 void PixelStrip::spiralsRand( SegmentSet segmentSet, byte spinPattern[], uint8_t spinPatternLength, byte numColors, int32_t prefColor, uint32_t BgColor, int numCycles, int wait ){
   byte numSegs = segmentSet.numSegs;
   byte colorPattern[numSegs];
- 
-  //because we're gonna use repeat mode we need to set the background as part of the pattern, so we tack it on 
-  uint32_t pallet[numColors + 1];  
+
+  //because we're gonna use repeat mode we need to set the background as part of the pattern, so we tack it on
+  uint32_t pallet[numColors + 1];
   pallet[numColors] = BgColor;
-  
+
   for(int i = 0; i < numSegs; i++){
 	  colorPattern[i] = numColors;
   }
@@ -3599,9 +3682,9 @@ void PixelStrip::spiralsRand( SegmentSet segmentSet, byte spinPattern[], uint8_t
 	  // } else if( prefColor == -2){
 		// pallet[i] = 1;
 	  } else {
-		 pallet[i] = prefColor; 
+		 pallet[i] = prefColor;
 	  }
-      colorPattern[i] = i;	  
+      colorPattern[i] = i;
   }
   spiralsSet( segmentSet, spinPattern, spinPatternLength, pallet, colorPattern, numCycles, wait );
 }
@@ -3612,16 +3695,16 @@ void PixelStrip::colorSpinRainbow( SegmentSet segmentSet, boolean forward, int n
 	uint16_t maxSegLength = segmentSet.maxSegLength;
 	uint32_t pixelColor;
 	uint16_t pixelNum;
-	
+
 	//alternate way to do it, more memory intensive, no direction control
-	// uint32_t pallet[maxSegLength]; 
+	// uint32_t pallet[maxSegLength];
 	// uint8_t pattern[maxSegLength];
 	// for(int i = 0; i < maxSegLength; i++ ){
 		// pallet[i] = Wheel((i * 256 / maxSegLength) & 255);
 		// pattern[i] = i;
 	// }
 	// colorSpinSimpleSet( segmentSet, pattern, maxSegLength, pallet, 0, 1, maxSegLength, 0, 0, 1, numCycles, wait );
-	 
+
 	//we always want to draw the line colors opposed to the direction
 	//ie if we're going forward, we'll draw the last color first
 	//this creates a smooth transition on odd length segments
@@ -3629,15 +3712,15 @@ void PixelStrip::colorSpinRainbow( SegmentSet segmentSet, boolean forward, int n
 	int8_t start = maxSegLength - 1;
 	int8_t end = -1;
 	int8_t step = -1;
-	
+
 	if(!forward){
 		start = 0;
 	    end = maxSegLength;
 		step = 1;
 	}
-		
-	for(int i = 0; i < numCycles; i++){	
-		stopPatternCheck();	
+
+	for(int i = 0; i < numCycles; i++){
+		stopPatternCheck();
 		yield();
 		//cycle through the max length segment, and draw the rainbow, shifting by i
 		for(int j = start; j != end; j+= step){
@@ -3664,7 +3747,7 @@ void PixelStrip::colorSpinRainbow( SegmentSet segmentSet, boolean forward, int n
 	 }
 	 sonarSpin( segmentSet, pallet, numColors, pattern, numColors, BgColor, totalFadeLength, spacing, inToOut, alternate, bounce, bounceChange, numCycles, wait);
  }
- 	
+
  //does a set of color spins where the color fades in fadelength steps
  //takes a set of colors in a pattern (using pallet as the colors) and will do a wave of each color in order
  //as many fades as possible will be fit onto the segmentSet at once (governed by the longest segment),
@@ -3682,14 +3765,14 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 	int8_t wavePos; //marker for tracking trail location
 	int8_t totalSpace = (numSimultWaves * (totalFadeLength + spacing)); //total space taken up by all the active waves (can be > maxSegLength)
 	uint8_t nextPalletIndex; //placeholder for next color for a wave
-	
+
 	//populate activeWavePos matrix array for the initally active waves
 	for(int i = 0; i < numSimultWaves; i++){
 		activeWavePos[i][0] = i % palletLength; //wave color
 		//set vars depending on if we're going forward or backward, or alternating
 		if(direct || (alternate && (i % 2 != 0))){
 			//place the head of the waves, starting at the end of the segmentSet, we need to draw the first wave part way along the segments
-			activeWavePos[i][1] = totalSpace - 1 - i * (totalFadeLength + spacing); 
+			activeWavePos[i][1] = totalSpace - 1 - i * (totalFadeLength + spacing);
 			activeWavePos[i][2] = 1; //set direction increment positive
 			startDirect[i] = 1; //initial wave direction
 			if(numSimultWaves == 1){ //if we just have one wave, we'll start it at the beginning of the segments for looks
@@ -3704,18 +3787,18 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 			}
 		}
 	}
-	
+
 	RGB palletRGB[palletLength];
 	RGB BgColorRGB = makeRGBFromColor(BgColor);
-	
+
 	uint32_t lineColor;
-	
+
 	//creates an RGB pallet from the passed in one
 	//note that it converts all colors in the pallet
 	//so watch your memory useage if you've pass in a big pallet
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
 
-	
+
 	//for eqch cycle, draw all the waves and fades, then determine the next wave position change color if needed
 	for (int i = 0; i <= numCycles; i++) {
 		stopPatternCheck();
@@ -3726,7 +3809,7 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 			dimStrip();
 		}
 			//for each wave, draw the trail, increment the wave head postion, and change colors if needed
-			for (int j = 0; j < numSimultWaves; j++) { 
+			for (int j = 0; j < numSimultWaves; j++) {
 				for(int k = 0; k < totalFadeLength; k++){
 					wavePos = (activeWavePos[j][1] - k * activeWavePos[j][2]);
 					if(!bounce){
@@ -3739,7 +3822,7 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 					//fill the segment with a faded trail (totalFadeLength - 1, makes the color do to the BgColor on the last step)
 					//kTemp = k;
 					//if(k > 0 ){ kTemp++; }
-					//segColor = desaturate( pallet[ activeWavePos[j][0] ] , (100 - k * 100) / (totalFadeLength -1) ); 
+					//segColor = desaturate( pallet[ activeWavePos[j][0] ] , (100 - k * 100) / (totalFadeLength -1) );
 				    lineColor = getCrossFadeStep( palletRGB[ activeWavePos[j][0] ], BgColorRGB, totalFadeLength - 1, k);
 					if( k > 0 ){ lineColor = dimColor(lineColor, 1); }; //real quick, dirty way to make the trails dim more dramatically, replace this with HSV dimming later
 					drawSegLineSimple(segmentSet, wavePos, lineColor, 1);
@@ -3760,7 +3843,7 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 						activeWavePos[j][2] = 1;
 						//if the wave started at then first segment, change it's color
 						if(startDirect[j] == 1 || bounceChange){
-						   activeWavePos[j][0] = nextPalletIndex;				
+						   activeWavePos[j][0] = nextPalletIndex;
 						}
 					}
 				} else{
@@ -3780,7 +3863,7 @@ void PixelStrip::sonarSpin( SegmentSet segmentSet, uint32_t pallet[], byte palle
 //sparks sparkChance to spawn (0 - 100), with maxSparks being able to exist on any given line
 //numColors sets number of colors to choose randomly
 //setting numColors to 1, and passing in a prefered color will use it
-//Color modes are as follows (for both Bg and main color): 
+//Color modes are as follows (for both Bg and main color):
 	//mode 1: just solid color
 	//mode 2: rainbow spread across the longest segment
 	//mode 3: use the bgSeg gradient
@@ -3806,44 +3889,44 @@ void PixelStrip::sparkSeg( SegmentSet segmentSet, byte sparkChance, byte maxSpar
 //spawns a random set of sparks that move in a radial direction (false is in to out)
 //sparks sparkChance to spawn (0 - 100), with maxSparks being able to exist on any given line
 //colors for sparks are choosen randomly from the pallet[]
-//Color modes are as follows (for both Bg and main color): 
+//Color modes are as follows (for both Bg and main color):
 	//mode 1: just solid color
 	//mode 2: rainbow spread across the longest segment
 	//mode 3: use the bgSeg gradient
 	//mode 4: use the non segmented BgGradient
 	//mode 5: rainbow spread across all segments
 void PixelStrip::sparkSegSet( SegmentSet segmentSet, byte sparkChance, byte maxSparks, uint32_t pallet[], uint8_t palletLength, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean direction, int numCycles, int wait ){
-	
-	byte numSegs = segmentSet.numSegs;	
-	
+
+	byte numSegs = segmentSet.numSegs;
+
 	byte spawnChance;
-	
+
 	//direction variables (default is sparks traveling in to out)
 	int8_t step = -1; //step amount
 	uint8_t outerLimit = 0; //last segment sparks can reach
 	uint8_t startSeg = numSegs - 1; //segement sparks start at
-	
+
 	if(!direction){
 		step = 1;
 		outerLimit = (numSegs - 1);
 		startSeg = 0;
 	}
-	  
+
 	uint16_t maxSegLength = segmentSet.maxSegLength;
-	
+
 	//fill the segments with the BgColor
 	for(int i = 0; i < maxSegLength; i++){
 		drawSegLineSimple(segmentSet, i, BgColor, BgColorMode);
 	}
-	  
+
 	//array of spark locations, formulated into maxSpark rows with maxSegLength columbs
 	//each cell contains a spark's segment position, with the cell's index being the spark's line
 	//-1 in a cell indicates the spark is not active
 	int8_t sparkLocations[maxSparks][maxSegLength];
-	
+
 	//array of spark colors, corrosponds to sparkLocations, but each cell contains the spark's color index
 	byte sparkColors[maxSparks][maxSegLength];
-	
+
 	//initialize the spark arrays
 	for(int i = 0; i < maxSparks; i++){
 		for(int j = 0; j < maxSegLength; j++){
@@ -3889,7 +3972,7 @@ void PixelStrip::sparkSegSet( SegmentSet segmentSet, byte sparkChance, byte maxS
 
 //color wipes a random set of colors
 //passing -1 as wipeLength will call colorWipeSections(), -2 will call colorWipeSegRadial()
-//numColors sets how many colors to wipe 
+//numColors sets how many colors to wipe
 //see colorWipe and colorWipePallet for more details
 //style sets the type of wipe:
 	//see colorWipeAdvSegment(), colorWipeSections(), and colorWipeSegRadial() comments for style guides
@@ -3898,7 +3981,7 @@ void PixelStrip::colorWipeRandomSeg( SegmentSet segmentSet, uint8_t style, uint3
 	byte pattern[numColors];
 	for(int i = 0; i < numColors; i++){
 		pallet[i] = randColor();
-		pattern[i] = i;	
+		pattern[i] = i;
 	}
 	colorWipePalletSeg(segmentSet, style, simult, pattern, numColors, pallet, wipeLength, wait, forward, alternate);
 }
@@ -3911,7 +3994,7 @@ void PixelStrip::colorWipeRandomSeg( SegmentSet segmentSet, uint8_t style, uint3
 //alternate sets if all segemtents wipe the same direction or alternate
 //simult sets if the wipes should occur simultaneously or one after another
 //NOTE; simult sets inToOut for colorWipeSections() (ie starting with last or first segment), it does nothing for colorWipeSegRadial()
-//style sets the type of wipe: 
+//style sets the type of wipe:
 	//see colorWipeAdvSegment(), colorWipeSections(), and colorWipeSegRadial() comments for style guides
 void PixelStrip::colorWipeSeg(SegmentSet segmentSet, uint32_t color, int8_t wipeLength, uint8_t wait, boolean forward, boolean alternate, boolean simult){
 	uint32_t pallet[1] = {color};
@@ -3934,34 +4017,34 @@ void PixelStrip::colorWipeSeg(SegmentSet segmentSet, uint32_t color, int8_t wipe
 //style sets the type of wipe:
 	//see colorWipeAdvSegment(), colorWipeSections(), and colorWipeSegRadial() comments for style guides
 void PixelStrip::colorWipePalletSeg(SegmentSet segmentSet, uint8_t style, boolean simult, byte colorPattern[], uint8_t colorPatternLength, uint32_t pallet[], int8_t wipeLength, uint8_t wait, boolean forward, boolean alternate) {
-  byte numSegs = segmentSet.numSegs;  
- 
+  byte numSegs = segmentSet.numSegs;
+
   if(wipeLength >= 0){  //switches from doing a segmented wipe to a section wipe
-      
+
 	  uint16_t maxSegLength = segmentSet.maxSegLength;
-	  
-	  //fix for shorthand for maxseglength 
+
+	  //fix for shorthand for maxseglength
 	  if(wipeLength == 0){
 	     wipeLength = maxSegLength;
-	  }	
-	   
+	  }
+
 	  byte segGroups[numSegs][2];
-  
+
 	  uint8_t numWipes = ceil(float(maxSegLength) / wipeLength);
-	  
+
 	  boolean forwardLocal = forward; //copy of forward, as it may change in the loops
-	  
+
 	  int16_t LEDPattern[numWipes][2];
 	  //set loop parameters for a forward loop
 	  int8_t directionConst = 1;
 	  uint8_t wipeStart = 0;
-	  
+
 	  //if we want to go backwards, change the loop parameters
 	  if(!forwardLocal){
 		directionConst = -1;
 		wipeStart = wipeLength - 1;
 	  }
-	  
+
 		for (int j = 0; j < numWipes; j++) {
 			if(alternate){ //if we're alternating, we switch the direction variables with each segemnt
 				if(forwardLocal){
@@ -3974,7 +4057,7 @@ void PixelStrip::colorWipePalletSeg(SegmentSet segmentSet, uint8_t style, boolea
 				forwardLocal = !forwardLocal;
 			}
 			LEDPattern[j][0] = (j * wipeLength) + wipeStart;
-			LEDPattern[j][1] = directionConst;	
+			LEDPattern[j][1] = directionConst;
 	  }
 	  colorWipeAdvSegment( segmentSet, style, simult, LEDPattern, numWipes, colorPattern, colorPatternLength, pallet, wipeLength, wait);
   } else if(wipeLength == -1){
@@ -3987,7 +4070,7 @@ void PixelStrip::colorWipePalletSeg(SegmentSet segmentSet, uint8_t style, boolea
 // Fill the pixels one after the other with a color in a rainbow pattern
 //forward == true moves pattern forward, ie incementing pixel steps
 //false moves it backward
-//segmented sets the style of rainbow for each segment, 
+//segmented sets the style of rainbow for each segment,
 void PixelStrip::colorWipeRainbowSeg(SegmentSet segmentSet, uint8_t wait, uint8_t wipeLength, boolean forward, boolean alternate, boolean segmented, boolean simult) {
  byte numSegs = segmentSet.numSegs;
  if(segmented){
@@ -4000,7 +4083,7 @@ void PixelStrip::colorWipeRainbowSeg(SegmentSet segmentSet, uint8_t wait, uint8_
 		//style is 3 b/c we want to set each segment to a color
 		colorWipePalletSeg( segmentSet, 3, simult, colorPattern, numSegs, pallet, wipeLength, wait, forward, alternate);
 	} else {
-		colorWipePalletSeg( segmentSet, 4, simult, 0, 0, 0, wipeLength, wait, forward, alternate);  
+		colorWipePalletSeg( segmentSet, 4, simult, 0, 0, 0, wipeLength, wait, forward, alternate);
 	}
 }
 
@@ -4024,17 +4107,17 @@ void PixelStrip::colorWipeAdvSegment( SegmentSet segmentSet, uint8_t style, bool
   byte numSegs = segmentSet.numSegs;
   //find the maximum segment length
   uint16_t maxSegLength = segmentSet.maxSegLength;
-  
-  //if wipelength is 0 (not a usefull number) we'll do a fully synchronized wipe, 
+
+  //if wipelength is 0 (not a usefull number) we'll do a fully synchronized wipe,
   //ie setting wipelength to the maximum segment length
   if(wipeLength == 0){
 	 wipeLength = maxSegLength;
   }
 
   byte segColorPattern[numSegs];
-  
-  uint16_t ledLocation; //led location for wipe 
-  
+
+  uint16_t ledLocation; //led location for wipe
+
   //set the inner and outer loop limits
   //allows reusing of loops to do a sequential wipe (one segment after another)
   //or a simultaneous wipe (all segments at once)
@@ -4044,47 +4127,47 @@ void PixelStrip::colorWipeAdvSegment( SegmentSet segmentSet, uint8_t style, bool
   int LEDPatternIndex;
   uint32_t color;
   byte colorModeBg;
-  
+
   if(simult){
 	outerLoopLimit = wipeLength;
 	innerloopLimit = LEDPatternLength;
   }
-  
+
   //if needed, map the style to the correct color mode for drawSimpleLine
   switch(style){
-		case 4: 
+		case 4:
 			colorModeBg = 2;
 			break;
-		case 5: 
+		case 5:
 			colorModeBg = 3;
 			break;
-		case 6: 
+		case 6:
 			colorModeBg = 4;
 			break;
-		case 7: 
+		case 7:
 			colorModeBg = 5;
 			break;
 		default:
 			colorModeBg = 1;
   }
-  
+
   //loops through each segment, setting one led at a time
   for(int i = 0; i < outerLoopLimit; i++){
 	stopPatternCheck();
 	yield();
 	for (int j = 0; j < innerloopLimit; j++) {
-		
+
 		//mode switching adjusts from sequential to simultaneous
 		//by matching the loop indexs
-		if(simult){	
+		if(simult){
 			wipeIndex = i;
 			LEDPatternIndex = j;
 		} else {
 			wipeIndex = j;
 			LEDPatternIndex = i;
 		}
-		
-		//sets the led location; adds the current loop value corrosponding 
+
+		//sets the led location; adds the current loop value corrosponding
 		//to the wipelength multiplied by the direction indicator to the lED start point
 		ledLocation = LEDPattern[LEDPatternIndex][0] + ( wipeIndex * LEDPattern[LEDPatternIndex][1] );
 		//if we've run over the number of leds, stop the loop, but only if we're not trying to start a wipe outside
@@ -4099,23 +4182,23 @@ void PixelStrip::colorWipeAdvSegment( SegmentSet segmentSet, uint8_t style, bool
 				case 1 : //color wipes each color from pallet in turn
 				  segColorPattern[k] = colorPattern[ LEDPatternIndex % colorPatternLength ];
 				break;
-				
+
 				case 2 : //color wipes alternating colors from pallet along the wipe
 				   segColorPattern[k] = colorPattern[ wipeIndex % colorPatternLength ];
 				break;
-				
+
 				case 3 : //alternates colors for each segment
 				   segColorPattern[k] = colorPattern[ k % colorPatternLength ];
 				break;
 			}
 		}
-		
+
 		if(style > 3){ //if we're drawing a rainbow/gradient, we need to use drawSegLineSimple();
 		    drawSegLineSimple( segmentSet, ledLocation, 0, colorModeBg);
 		} else {
-			drawSegLine( segmentSet, ledLocation, segColorPattern, pallet);
+			drawSegLine( segmentSet, ledLocation, segColorPattern, pallet, 1, 1, false);
 		}
-		
+
 		if(!simult){
 	      show();
 	      delay(wait);
@@ -4125,10 +4208,10 @@ void PixelStrip::colorWipeAdvSegment( SegmentSet segmentSet, uint8_t style, bool
 		show();
 		delay(wait);
 	}
-  }	
+  }
 }
 
-//a sightly different color wiping function for segments, 
+//a sightly different color wiping function for segments,
 //(this function can be called from other segmented color wipe functions, except rainbow, by passing -1 as the wipe length)
 //color wipes each segment sequentially
 //colors are choosen according to colorPattern[], pallet[], and the style.
@@ -4147,27 +4230,27 @@ void PixelStrip::colorWipeSections( SegmentSet segmentSet, byte colorPattern[], 
 	byte numSegs = segmentSet.numSegs;
     //find the maximum segment length
     uint16_t maxSegLength = segmentSet.maxSegLength;
-	
+
 	//loop variables for changing the direction of the wipe
 	int8_t loopDirct, firstSeg, lastSeg, segLoopDirct ;
 	int16_t startLimit, endLimit, segLength;
-	
+
 	int16_t ledLocation;
-	
+
 	uint32_t color;
-	
+
 	//loop variables for the order of the wipe (default is first segment first)
 	firstSeg = 0;
 	lastSeg = numSegs;
 	segLoopDirct = 1;
-	
+
 	//if we want last segment first, switch loop variables
 	if(inToOut){
 		firstSeg = numSegs - 1;
 		lastSeg = -1;
-		segLoopDirct = -1;	
+		segLoopDirct = -1;
 	}
-	
+
 	//loops through each segment, seting one led at a time
 	for(int i = firstSeg; i != lastSeg; i += segLoopDirct){
 		stopPatternCheck();
@@ -4178,7 +4261,7 @@ void PixelStrip::colorWipeSections( SegmentSet segmentSet, byte colorPattern[], 
 		if(forward){  //positive: start from zeroth segment pixel and run to last
 			loopDirct = 1;
 			startLimit = 0;
-			endLimit = segLength;  
+			endLimit = segLength;
 		} else {  //negative: start from end of segment and run till beginning
 			loopDirct = -1;
 			startLimit = segLength - 1;
@@ -4187,40 +4270,40 @@ void PixelStrip::colorWipeSections( SegmentSet segmentSet, byte colorPattern[], 
 		for (int j = startLimit; j != endLimit; j += loopDirct) {
 			//get the location of the next pixel based on out position in the segement
 			ledLocation = getSegmentPixel(segmentSet, i, j);
-			
+
 			//set the pixel color according to the style
 			switch(style){
 				case 1 : //color wipes each color from pallet in turn
 				  color = pallet[ colorPattern[ i % colorPatternLength ] ];
 				break;
-				
+
 				case 2 : //color wipes alternating colors from pallet along the wipe
 				  color = pallet[ colorPattern[ j % colorPatternLength ] ];
 				break;
-				
+
 				case 3 :  //color wipes a rainbow spread evenly across the strip
 				  color = Wheel( (ledLocation  * 256 / numLEDs) & 255 );
 				break;
-				
+
 				case 4 :  //color wipes a rainbow spreak evenly across each segment
 				  color = Wheel( (j * 256 / segLength) & 255);
 				break;
-				
+
 				case 5 :  //color wipes a rainbow spreak evenly across each segment
 				  color = Wheel( (i * 256 / numSegs) & 255);
 				break;
-				
+
 				case 6 :  //color wipes the BgGradientSeg
 				  color = getSegBgGradientColor(segmentSet, i);
 				break;
-				
+
 				case 7 : //color wipes the BgGradient
 				  color = getBgGradientColor(ledLocation);
 				break;
 			}
-			
+
 			setPixelColor( ledLocation, color );
-			
+
 			show();
 			delay(wait);
 		}
@@ -4257,33 +4340,33 @@ void PixelStrip::colorWipeSegRadial(SegmentSet segmentSet, byte colorPattern[], 
 	byte numSegs = segmentSet.numSegs;
     //find the maximum segment length
     uint16_t maxSegLength = segmentSet.maxSegLength;
-	
+
 	uint8_t pattern[numSegs];
-	
+
 	//outer loop limit variables, default is to move in the positive direction
 	uint8_t startSeg = 0;
 	int8_t endSeg = numSegs;
 	int8_t step = 1;
 	uint8_t colorModeBg = 1;
-	
+
 	 //if needed, map the style to the correct color mode for drawSimpleLine
 	switch(style){
-		case 3: 
+		case 3:
 			colorModeBg = 3;
 			break;
-		case 4: 
+		case 4:
 			colorModeBg = 2;
 			break;
-		case 5: 
+		case 5:
 			colorModeBg = 4;
 			break;
-		case 6: 
+		case 6:
 			colorModeBg = 5;
 			break;
 		default:
 			colorModeBg = 1;
   }
-	
+
 	//if we're not going positive, we need to adjust the outer loop variables
 	//ie, we need to start the loop at the last segment, and move backwards
 	if(!forward){
@@ -4291,7 +4374,7 @@ void PixelStrip::colorWipeSegRadial(SegmentSet segmentSet, byte colorPattern[], 
 		endSeg = -1;
 	    step = -1;
 	}
-	
+
 	//loop through the segments,
 	//for each step, loop across the longest segment and draw a line section at each step
 	//the line segements are drawn in single pixel chunksa according to the current segment
@@ -4300,29 +4383,29 @@ void PixelStrip::colorWipeSegRadial(SegmentSet segmentSet, byte colorPattern[], 
 		stopPatternCheck();
 		yield();
 		for(int j = 0; j < maxSegLength; j++){
-			
+
 			//set the pixel color according to the style
 			switch(style){
 				case 1 : //colors follow the color pattern across the longest segment
 				  pattern[i] = colorPattern[j % colorPatternLength];
 				break;
-				
+
 				case 2 : //colors follow the color pattern, alternating for each segment
 				  pattern[i] = colorPattern[i % colorPatternLength];
 				break;
 			}
-			
+
 			//if style > 2 we're doing a wipe using drawSegLineSimpleSection's special functions
 			if(style > 2){
 				drawSegLineSimpleSection( segmentSet, i, i, j, 0, colorModeBg);
 			} else {
-				drawSegLineSection(segmentSet, i, i, j, pattern, pallet);	
+				drawSegLineSection(segmentSet, i, i, j, pattern, pallet, 1, 1, false);
 			}
 		}
 		show();
 		delay(wait);
 	}
-	
+
 }
 
 // Fill the segments one after the other with a color in a rainbow pattern
@@ -4338,20 +4421,38 @@ void PixelStrip::colorWipeRainbowSegRadial(SegmentSet segmentSet, uint8_t wait, 
 	}
 	colorWipeSegRadial(segmentSet, colorPattern, numSegs, pallet, 2, forward, wait);
 }
-
+//add mirror mode
 //does fireV2Seg for numCycles cycles
-void PixelStrip::doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, int numCycles, int wait){
+void PixelStrip::doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, boolean blend, int numCycles, int wait){
 	//stripOff(); //clear the strip, b/c fire doesn't if the flame is shorter than the strip
-	
+	byte numSegs = segmentSet.numSegs;
+
 	//need to make an RGB pallet for fireV2
-	RGB palletRGB[palletLength]; 
+	RGB palletRGB[palletLength];
 	//recreate the supplied pallet in RGB
 	makeRGBpalletFromPallet( pallet, palletRGB, palletLength);
-	
+
+	//The fire works by storing heat values at points on the strip
+    //b/c you cannot make variable length arrays, the heat values for the whole segmentSet
+    //are stored in one array, using offsets to ensure we only work on the section that
+    //corrosponds to the corret segment
+    //the offsets are stored in heatSegStarts in order of the segments
+    //the heat array is sized by adding up the length of the segments
+    //an alternate way do do this would be to have an array of heats with lengths
+    //equal to the maxSegLength, but this is memory inefficient
+    uint16_t segmentSetLength = 0;
+    uint16_t heatSegStarts[numSegs];
+    //get the total segmentSet length, and set the starting offsets
+    for(int i = 0; i < numSegs; i++){
+
+		heatSegStarts[i] = segmentSetLength; //the start offsets are just the lengths of each segment
+		segmentSetLength += segmentSet.getTotalSegLength(i);
+    }
+
 	for(int i = 0; i < numCycles; i++){
 		stopPatternCheck();
 		yield();
-		fireV2Seg(segmentSet, palletRGB, palletLength, Cooling, Sparking, wait);
+		fireV2Seg(segmentSet, heatSegStarts, segmentSetLength, palletRGB, palletLength, Cooling, Sparking, blend, wait);
 	}
 }
 
@@ -4366,56 +4467,42 @@ void PixelStrip::doFireV2Seg(SegmentSet segmentSet, uint32_t pallet[], uint8_t p
 	//try { Color(255, 0, 0), Color(255, 143, 0) , Color(255, 255, 255) } for a tranditional fire
 	//or {Color(238, 130, 238),  Color(123, 7, 197) , Color(225, 0, 127), Color(255, 255, 255) } for a pink/purple fire
 //The other variables determine how the fire is drawn:
-	//Cooling: indicates how fast a flame cools down. More cooling means shorter flames, 
+	//Cooling: indicates how fast a flame cools down. More cooling means shorter flames,
 	//recommended values are between 20 and 100. 50 seems the nicest.
-	
-	//Sparking: indicates the chance (out of 255) that a spark will ignite. A higher value makes the fire more active. 
+
+	//Sparking: indicates the chance (out of 255) that a spark will ignite. A higher value makes the fire more active.
 	//Suggested values lay between 50 and 200. 120 works well.
 	//wait sets the time between drawing new flames
-void PixelStrip::fireV2Seg(SegmentSet segmentSet, RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, int wait) {
+void PixelStrip::fireV2Seg(SegmentSet segmentSet, uint16_t heatSegStarts[], uint16_t segmentSetLength, RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, boolean blend, int wait) {
     byte numSegs = segmentSet.numSegs;
 	uint8_t currentBrightness = getBrightness();
-  
-    //The fire works by storing heat values at points on the strip
-    //b/c you cannot make variable length arrays, the heat values for the whole segmentSet
-    //are stored in one array, using offsets to ensure we only work on the section that 
-    //corrosponds to the corret segment
-    //the offsets are stored in heatSegStarts in order of the segments
-    //the heat array is sized by adding up the length of the segments
-    //an alternate way do do this would be to have an array of heats with lengths 
-    //equal to the maxSegLength, but this is memory inefficient
-    uint16_t segmentSetLength = 0;
-    uint16_t heatSegStarts[numSegs];
-    //get the total segmentSet length, and set the starting offsets
-    for(int i = 0; i < numSegs; i++){
-		heatSegStarts[i] = segmentSetLength; //the start offsets are just the lengths of each segment
-		segmentSetLength += segmentSet.getTotalSegLength(i);
-    }
-    byte heat[segmentSetLength];  
-  
+
+	byte heat[segmentSetLength];
+
     uint16_t  segLength, heatSecStart, heatIndex, pixelSecNum;
     int16_t ledLocation;
 	int cooldown;
-  
+
+
     //For each segment do the following:
     for(int j = 0; j < numSegs; j++){
 	    segLength = segmentSet.getTotalSegLength(j);
 	    heatSecStart = heatSegStarts[j]; //current segment's start point in the heat array
-	  
+
 	    // Step 1. Cool down every cell a little
 	    for( int i = 0; i < segLength; i++) {
-		  
+
 			heatIndex = i + heatSecStart; //adjusted index for heat array
 			cooldown = random(0, ((Cooling * 10) / segLength) + 2);
-			
+
 			//if cooldown would turn off a pixel, turn if off,
-			//otherwise just cool it down 
+			//otherwise just cool it down
 			if(cooldown > heat[heatIndex]) {
 			  heat[heatIndex] = 0;
 			} else {
 			  heat[heatIndex] = heat[heatIndex]-cooldown;
 			}
-		
+
 	    }
 
 	    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
@@ -4423,7 +4510,7 @@ void PixelStrip::fireV2Seg(SegmentSet segmentSet, RGB pallet[], uint8_t palletLe
 			heatIndex = k + heatSecStart; //adjusted index for heat array
 			heat[heatIndex] = (heat[heatIndex - 1] + heat[heatIndex - 2] + heat[heatIndex - 2] ) / 3;
 	    }
-	  
+
 	    // Step 3.  Randomly ignite new 'sparks' near the bottom
 	    if( random(255) < Sparking ) {
 			int y = random(min( 7, segLength )); //pick a random pixel near the start of the strip
@@ -4436,7 +4523,11 @@ void PixelStrip::fireV2Seg(SegmentSet segmentSet, RGB pallet[], uint8_t palletLe
 	    // Step 4. For each flame, convert heat to LED colors
 		for( int i = 0; i < segLength; i++) {
 			ledLocation = getSegmentPixel(segmentSet, j, i);
-			setPixelHeatColorPallet( ledLocation, heat[i + heatSecStart], pallet, palletLength );
+			if(blend){
+				setPixelHeatColorPallet( ledLocation, heat[i + heatSecStart], pallet, palletLength);
+			} else {
+				setPixelHeatColorPalletNoBlend( ledLocation, heat[i + heatSecStart], pallet, palletLength);
+			}
 		}
 		setBrightness(currentBrightness);
     }
