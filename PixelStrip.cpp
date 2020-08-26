@@ -2703,6 +2703,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	uint8_t colors[numSegs][maxNumShooters]; //holds a color pallet color index for each of the sections
 	//boolean spawnOk[numSegs]; //if true, then the section is not at capacity for shooters
 	boolean shooterActive[numSegs][maxNumShooters]; //records if a shooter is active in a section
+	//boolean displayShooter[numSegs][maxNumShooters]; //prototype to force leds into random starting postions (but not draw them until they reset once)
 	int8_t directionArray[2] = {0,0}; //used for patternSweepGetTrailLed();
 	boolean spawnOkTest = true; //if true, then a shooter and its trail are not within the spawn zone
 	byte totalShootersActive = 0;
@@ -2719,6 +2720,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 	uint8_t chance; //stores random roll for spawning
 
 	ledLocation = 0;
+	
 
 	//used for generating a random pallet, we don't want to modify the passed in one
 	//as a rule if color mode is 4 we generate a random pallet of length palletLength
@@ -2745,6 +2747,9 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 		//spawnOk[i] = true;
 		for(int j = 0; j < maxNumShooters; j++){
 			shooterActive[i][j] = false;
+			//used to garrentee even spacing of leds (uncomment displayShooter lines for this to work)
+			//shooterLocs[i][j] = random( segmentSet.getTotalSegLength(i)); //-directions[i]*(random(5* maxNumShooters) + trailLength);
+			//displayShooter[i][j] = true;
 		}
 		if(direction){
 			directions[i] = 1;
@@ -2826,7 +2831,7 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 				} else if(shooterActive[i][j]) {
 
 					ledLocation = shooterLocs[i][j];
-
+					//if(displayShooter[i][j]){
 					//if we're in streamer mode, we don't turn off any pixels, new ones just cancel old out
 					if(trails < 3){
 						directionArray[0] = - directions[i]; //due to the way  patternSweepGetTrailLed() works, the direction array must be reversed
@@ -2855,13 +2860,14 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 								//if we're within the section bounds, draw the next trail led
 								if( ( trailLedLocation <= sectionEnd ) && ( trailLedLocation >= sectionStart ) ){
 									//dimming factor for the trail member, (100 is no dimming)
-								    dimFactor = 100 - (percentDim * k);
+									dimFactor = 100 - (percentDim * k);
 									ledSegLoc = getSegmentPixel(segmentSet, i, trailLedLocation);
 									patternSweepSetPixelColor(ledSegLoc, palletCopy[ colors[i][j] ], colorMode, dimFactor);
 								}
 							}
 						}
 					}
+				
 
 					//draw the main body of the shooter, but
 					//only if it falls within the section
@@ -2870,12 +2876,14 @@ void PixelStrip::shooterSeg( SegmentSet segmentSet, uint32_t pallet[], byte pall
 						ledSegLoc = getSegmentPixel(segmentSet, i, ledLocation);
 						patternSweepSetPixelColor(ledSegLoc, palletCopy[ colors[i][j] ], colorMode, 100);
 					}
+					//} //wrapper for commented displayShooter check above
 
 					//if a shooter has reached the end of the section, plus the trail length, the shooter is now inactive, otherwise, move the shooter one step
 					//the reason why we include the trail length is to allow the trail to move off the section
 					//anything that falls outside the section won't be drawn
 					if( ( ledLocation > (sectionEnd + trailLength) ) || ( ledLocation < (sectionStart - trailLength) ) ){
 						shooterActive[i][j] = false;
+						//displayShooter[i][j] = true;
 						totalShootersActive--;
 					} else {
 						shooterLocs[i][j] = ledLocation + directions[i];
@@ -3285,6 +3293,8 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 
 	//map the BgColor to the correct color mode for drawSimpleLine
 	switch(BgColor){
+		case -1: //for combalability with old code, (-1 used to indicate rainbow BG)
+			colorModeBg = 2;
 		case -2:
 			colorModeBg = 2;
 			break;
@@ -3322,7 +3332,7 @@ void PixelStrip::colorSpin( SegmentSet segmentSet, byte spinPattern[], uint8_t s
 				if(nextLineOn > maxSegLength - 1){
 					continue;
 				}
-			    drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[i], pallet, colorMode, colorModeBg, true);
+			    drawSegLine( segmentSet, nextLineOn, spinPatternPatterns[i], pallet, colorMode, colorModeBg, repeat);
 			}
 		}
 		repeatCount += totalPatternLength;
@@ -3502,7 +3512,7 @@ void PixelStrip::colorSpinSimple( SegmentSet segmentSet, byte numColors, int32_t
 				pallet[i] = randColor();
 			 }
 		 } else {  //one color, use it
-			 pattern[0] = 1;
+			 pattern[0] = 0;
 			 pallet[0] = prefColor;
 			 patternMode = 0;  //only pattern mode 0 makes sense for a single color
 		 }
@@ -4479,6 +4489,7 @@ void PixelStrip::fireV2Seg(SegmentSet segmentSet, uint16_t heatSegStarts[], uint
 
 	byte heat[segmentSetLength];
 
+
     uint16_t  segLength, heatSecStart, heatIndex, pixelSecNum;
     int16_t ledLocation;
 	int cooldown;
@@ -4506,7 +4517,7 @@ void PixelStrip::fireV2Seg(SegmentSet segmentSet, uint16_t heatSegStarts[], uint
 	    }
 
 	    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-	    for( int k = (segLength - 1); k >= 1; k--) {
+	    for( int k = (segLength - 1); k >= 2; k--) {
 			heatIndex = k + heatSecStart; //adjusted index for heat array
 			heat[heatIndex] = (heat[heatIndex - 1] + heat[heatIndex - 2] + heat[heatIndex - 2] ) / 3;
 	    }
