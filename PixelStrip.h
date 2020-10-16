@@ -9,7 +9,7 @@
 #include "pins_arduino.h"
 #endif
 
-#include "Adafruit_GFX.h"
+//#include "Adafruit_GFX.h" //not needed at this time
 #include "Adafruit_NeoPixel.h"
 #include "RGB.h"
 #include "segmentSection.h"

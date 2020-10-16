@@ -42,15 +42,15 @@ PixelStrip::PixelStrip(uint16_t n, uint8_t p, uint8_t t)
 //. patternSweepRepeat is memory with large patterns (sorta fixed with gradientCycle)
 //. add radial rainbow to drawLineSimple (done, need to update/replace functions that call it) (done)
 //. simpleRepeatPattern takes up to much memory, isnt 255 pixel compatible
-//. add a direction to segments, which treats their pixels in reverse order (done) -----> fox segment functions to not clash with this
+//. add a direction to segments, which treats their pixels in reverse order (done) -----> fix segment functions to not clash with this
 //. make RGB stored in PROGMEM, not sure how to work with dynamic ones (canceled, dont use RGB for variables in .ino)
 //. fix end points on gradientCycle (done sorta, the dot doesn't always happen, depends on the lengths)
-//. make shooter take an array of variable lengths --> write helper function for a fixed length {done} --> also made one that takes segments (but only continuons ones) (done)
+//. make shooter take an array of variable lengths --> write helper function for a fixed length {done} --> also made one that takes segments (done)
 //. look at reworking patternSweep, it's slow with a lot of pixels, rework desaturate funct
 //. for shooterSeg, let you split the segments into pieces?
 //. rewrite do simple repeat pattern to not use crossfadeRandom, instead repeat the pattern down the strip
 //. blend the colors in fireV2 for a more nuanced fire (done)
-//. add the ability to shift a rainbow bg / anything that uses wheel by adding and offset parameter (you could also do this of the BgGradient)
+//. add the ability to shift a rainbow bg / anything that uses wheel by adding and offset parameter (you could also do this of the BgGradient) (done, not for BG)
 //. adjust segGradientCycleSweep to account for dummy leds
 //. merge sonarWave and sonarSpin into one funct b/c they share the same code mostly
 
@@ -78,8 +78,8 @@ PixelStrip::PixelStrip(uint16_t n, uint8_t p, uint8_t t)
 //. simple steamer where it takes a pallet, no pattern (like simpleWaves)
 //. shooter that takes only one color (maybe use the palletLength for the color and a mode?) (right now, you need to make a one length pallet)
 //. a gradient segment function that repeats the same gradient down each segment (done)
-//. add a rainbow mode to shooter seg where the rainbow is destributed down the seg
-//. gradientSweep rainbow (needs direction setting in segment definition)
+//. add a rainbow mode to shooter seg where the rainbow is destributed down the seg (done?)
+//. gradientSweep rainbow (needs direction setting in segment definition) (not needed, colorSpin can do this?)
 
 void PixelStrip::stripOff(void)
 {
