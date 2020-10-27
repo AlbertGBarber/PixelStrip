@@ -118,7 +118,7 @@ public:
         twinkle(int32_t BgColor, int32_t preferedColor, uint8_t mode, int resetRate, int numPixels, int runTime),
         twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLength, uint8_t mode, int resetRate, int numPixels, int runTime),
         shiftingSea(uint32_t pallet[], uint8_t palletLength, uint8_t gradLength, uint8_t mode, uint8_t grouping, int numCycles, int wait),
-        shiftingRainbowSea( uint8_t gradLength, uint8_t grouping, int numCycles, int wait ),
+        shiftingRainbowSea( uint8_t grouping, int numCycles, int wait ),
         fire(int32_t BgColor, boolean BgColorOn, uint32_t preferedColor, int fadeRate, int fadeSteps, int numPixels, int randFactor, int runTime),
         doFireV2(uint32_t pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int numCycles, int wait),
         fireV2(RGB pallet[], uint8_t palletLength, int Cooling, int Sparking, uint16_t flameLength, boolean repeat, boolean forward, boolean alternating, boolean blend, int wait),

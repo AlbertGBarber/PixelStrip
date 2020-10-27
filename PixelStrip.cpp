@@ -744,7 +744,7 @@ void PixelStrip::shiftingSea(uint32_t pallet[], uint8_t palletLength, uint8_t gr
 
 // like shiftingSea, but we use a full rainbow as the colors
 // only one mode, and the fade length is fixed to 255 (total rainbow cycle length)
-void PixelStrip::shiftingRainbowSea(uint8_t gradLength, uint8_t grouping, int numCycles, int wait) {
+void PixelStrip::shiftingRainbowSea(uint8_t grouping, int numCycles, int wait) {
 
     uint16_t pixelOffsets[numLEDs];
     //assign groups of leds random offsets
