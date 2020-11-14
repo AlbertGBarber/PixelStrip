@@ -131,6 +131,7 @@ public:
         rainbow(uint8_t wait),
         rainbowCycle(uint8_t wait, uint8_t numCycles),
         solidRainbowCycle(uint8_t wait, uint8_t numCycles),
+        fixedLengthRainbowCycle(uint8_t length, boolean direction, uint16_t numCycles, uint8_t wait),
         colorWipe(uint32_t color, uint16_t wipeLength, int wait, boolean forward, boolean alternate, boolean simult),
         colorWipeRandom(uint8_t style, uint32_t numColors, uint16_t wipeLength, int wait, boolean forward, boolean alternate, boolean simult),
         colorWipePallet(uint8_t style, boolean simult, byte colorPattern[], uint8_t colorPatternLength, uint32_t pallet[], uint16_t wipeLength, int wait, boolean forward, boolean alternate),

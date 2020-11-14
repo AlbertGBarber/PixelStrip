@@ -707,9 +707,9 @@ void PixelStrip::shiftingSea(uint32_t pallet[], uint8_t palletLength, uint8_t gr
     uint16_t totalCycleLength = palletLength * gradLength;
 
     // choose the offsets based on the mode
-    if (mode == 0){
-        //mode 0, groups of leds are assigned an offset between any consecutive pair of colors in the pallet
-        //populates the pixelOffsets array
+    if (mode == 0) {
+        // mode 0, groups of leds are assigned an offset between any consecutive pair of colors in the pallet
+        // populates the pixelOffsets array
         genShiftingSeaGroupedOffsetArray(pixelOffsets, grouping, totalCycleLength);
     } else {
         // for mode 1, all the leds will start somewhere between the fade from the first to second colors
@@ -747,12 +747,12 @@ void PixelStrip::shiftingSea(uint32_t pallet[], uint8_t palletLength, uint8_t gr
 void PixelStrip::shiftingRainbowSea(uint8_t grouping, int numCycles, int wait) {
 
     uint16_t pixelOffsets[numLEDs];
-    //assign groups of leds random offsets
-    //populates the pixelOffsets array
+    // assign groups of leds random offsets
+    // populates the pixelOffsets array
     genShiftingSeaGroupedOffsetArray(pixelOffsets, grouping, 255);
 
-    //for each cycle, shift the color of all the leds one step using the Wheel function
-    //accounting for offsets
+    // for each cycle, shift the color of all the leds one step using the Wheel function
+    // accounting for offsets
     for (int i = 0; i < numCycles; i++) {
         for (int j = 0; j < numLEDs; j++) {
             setPixelColor(j, Wheel((i + pixelOffsets[j]) % 255));
@@ -762,9 +762,9 @@ void PixelStrip::shiftingRainbowSea(uint8_t grouping, int numCycles, int wait) {
     }
 }
 
-//fills in the pixelOffsets array for shiftingSea and shiftingRainbowSea functions
-//assigns groups of leds a offset between 0 and totalCycleLength
-//groups are formed between consecutive leds and vary randomly from 1 to grouping in size
+// fills in the pixelOffsets array for shiftingSea and shiftingRainbowSea functions
+// assigns groups of leds a offset between 0 and totalCycleLength
+// groups are formed between consecutive leds and vary randomly from 1 to grouping in size
 void PixelStrip::genShiftingSeaGroupedOffsetArray(uint16_t pixelOffsets[], uint8_t grouping, uint16_t totalCycleLength) {
     uint8_t groupSize;
     // grouping must be at least 1
@@ -1168,6 +1168,37 @@ void PixelStrip::solidRainbowCycle(uint8_t wait, uint8_t numCycles) {
     }
 }
 
+//cycles rainbows of length x along the strip in direction
+//will draw as many rainbows as possible
+//for doing one rainbow along the whole strip, use rainbowCycle
+void PixelStrip::fixedLengthRainbowCycle(uint8_t length, boolean direction, uint16_t numCycles, uint8_t wait) {
+    
+    //cannot have a length greater than 256, as that's how long a rainbow is
+    if (length > 256) {
+        length = 256;
+    }
+    int8_t directionModifier = 1;
+    uint16_t startPoint = 0;
+    if (!direction) {
+        startPoint = numLEDs - 1;
+        directionModifier = -1;
+    }
+
+    for (int i = 0; i < numCycles; i++) {
+        stopPatternCheck();
+        for (int j = 0; j < numLEDs; j++) {
+            //we always need to make a rainbow of length # of steps
+            //this is determined using (j + i) % length * (256 / length)
+            //(j + i) % length keeps our postion counter between 0 and length
+            //while * (256 / length) shifts the counter forward by (256/ length steps)
+            //so that we always finsh a rainbow after length # of steps
+            setPixelColor(startPoint + j * directionModifier, Wheel( ( ( (j + i) % length ) * 256 / length ) % 255 ) );
+        }
+        show();
+        delay(wait);
+    }
+}
+
 // color wipes a random set of colors
 // numColors sets how many colors to wipe
 // see colorWipe and colorWipePallet for more details
@@ -1497,7 +1528,7 @@ void PixelStrip::drawPattern(byte pattern[][2], uint8_t patternLength, uint32_t 
 
 // does a simpleStreamer with random colors, or one prefered color
 // passing numColors > 1 will do random of that many colors
-//   pssing one will use the preferedColor\
+//     pssing one will use the preferedColor\
 //see simpleStreamer for explanation of other variables
 void PixelStrip::simpleStreamerRand(byte numColors, uint32_t preferedColor, byte streamerLength, byte spacing, int32_t BgColor, boolean forward, byte numCycles, int wait) {
     byte patternLength = numColors;
@@ -2083,7 +2114,7 @@ void PixelStrip::patternSweepRainbow(uint16_t pattern[][2], uint8_t patternLengt
 
 // does a patternSweepRepeat with random colors, or one prefered color
 // passing numColors > 1 will do random of that many colors
-//   pssing one will use the preferedColor\
+//     pssing one will use the preferedColor\
 //see patternSweepRepeat / patternSweep for explanation of other variables
 void PixelStrip::patternSweepRepeatRand(byte numColors, uint32_t preferedColor, int32_t BgColor, int trails, byte trailLength, boolean scanner, boolean direction, byte eyeSize, byte spacing, uint8_t colorMode, int wait, int numCycles) {
 
