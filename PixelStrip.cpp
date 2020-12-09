@@ -2838,6 +2838,7 @@ void PixelStrip::fillSegColor(SegmentSet segmentSet, byte segNum, uint32_t color
 // spawns shooters along segment of the strip, a shooter is like a patternSweep, but it terminates when it gets to the end of a segment
 // the colors of shooters will be choosen randomly from the pallet
 // passing -1 as BgColor will set it to rainbow, -3 sets to Bg gradient
+// bgPrefill (true/false) determines if the background color is filled in hwne the effect starts, or as the shooters are drawn
 // spawnChance is the percentage chance to spawn a shooter on each cycle
 // maxNumShooters is the maximum number of shooters that can be active in one section at one time
 // trails:
@@ -2854,7 +2855,7 @@ void PixelStrip::fillSegColor(SegmentSet segmentSet, byte segNum, uint32_t color
 // alternating will alternate the dirction for each subsequent section
 // wait is how fast the shooters move
 // numCycles is total number of cycles the system will run
-void PixelStrip::shooterSeg(SegmentSet segmentSet, uint32_t pallet[], byte palletLength, int32_t BgColor, uint8_t spawnChance, byte maxNumShooters, int trails, uint8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles) {
+void PixelStrip::shooterSeg(SegmentSet segmentSet, uint32_t pallet[], byte palletLength, int32_t BgColor, boolean bgPrefill, uint8_t spawnChance, byte maxNumShooters, int trails, uint8_t trailLength, uint8_t colorMode, boolean direction, boolean alternating, int wait, int numCycles) {
     byte numSegs = segmentSet.numSegs;
     int16_t shooterLocs[numSegs][maxNumShooters]; // locations of shooters
     int8_t directions[numSegs]; // the step rate for each section, ie -1 or 1 determined by the direction variable and alternating
@@ -2922,10 +2923,14 @@ void PixelStrip::shooterSeg(SegmentSet segmentSet, uint32_t pallet[], byte palle
     if (trails > 2) {
         BgColor = 0;
     }
-    for (int i = 0; i < numSegs; i++) {
-        for (int j = 0; j < segmentSet.getTotalSegLength(i); j++) {
-            ledSegLoc = getSegmentPixel(segmentSet, i, j);
-            setBackgroundSingle(ledSegLoc, BgColor);
+
+    //if the bg is to be filler before the shooters start, fill it in
+    if(bgPrefill){
+        for (int i = 0; i < numSegs; i++) {
+            for (int j = 0; j < segmentSet.getTotalSegLength(i); j++) {
+                ledSegLoc = getSegmentPixel(segmentSet, i, j);
+                setBackgroundSingle(ledSegLoc, BgColor);
+            }
         }
     }
 
@@ -4046,7 +4051,7 @@ void PixelStrip::sonarSpin(SegmentSet segmentSet, uint32_t pallet[], byte pallet
 // mode 3: use the bgSeg gradient
 // mode 4: use the non segmented BgGradient
 // mode 5: rainbow spread across all segments
-void PixelStrip::sparkSeg(SegmentSet segmentSet, byte sparkChance, byte maxSparks, byte numColors, uint32_t prefColor, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean direction, int numCycles, int wait) {
+void PixelStrip::sparkSeg(SegmentSet segmentSet, byte sparkChance, byte maxSparks, byte numColors, uint32_t prefColor, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean bgPrefill, boolean direction, int numCycles, int wait) {
     if (colorMode == 1) {
         uint32_t pallet[numColors];
         if (numColors > 1) { // more than one color, so we'll pick at random
@@ -4054,12 +4059,12 @@ void PixelStrip::sparkSeg(SegmentSet segmentSet, byte sparkChance, byte maxSpark
         } else { // one color, use it
             pallet[0] = prefColor;
         }
-        sparkSegSet(segmentSet, sparkChance, maxSparks, pallet, numColors, 1, BgColor, BgColorMode, direction, numCycles, wait);
+        sparkSegSet(segmentSet, sparkChance, maxSparks, pallet, numColors, 1, BgColor, BgColorMode, bgPrefill, direction, numCycles, wait);
     } else {
         // if we're not using color mode 1, our pallet should be empty
         uint32_t pallet[1];
         pallet[0] = 0;
-        sparkSegSet(segmentSet, sparkChance, maxSparks, pallet, 1, colorMode, BgColor, BgColorMode, direction, numCycles, wait);
+        sparkSegSet(segmentSet, sparkChance, maxSparks, pallet, 1, colorMode, BgColor, BgColorMode, bgPrefill, direction, numCycles, wait);
     }
 }
 
@@ -4067,12 +4072,13 @@ void PixelStrip::sparkSeg(SegmentSet segmentSet, byte sparkChance, byte maxSpark
 // sparks sparkChance to spawn (0 - 100), with maxSparks being able to exist on any given line
 // colors for sparks are choosen randomly from the pallet[]
 // Color modes are as follows (for both Bg and main color):
-// mode 1: just solid color
-// mode 2: rainbow spread across the longest segment
-// mode 3: use the bgSeg gradient
-// mode 4: use the non segmented BgGradient
-// mode 5: rainbow spread across all segments
-void PixelStrip::sparkSegSet(SegmentSet segmentSet, byte sparkChance, byte maxSparks, uint32_t pallet[], uint8_t palletLength, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean direction, int numCycles, int wait) {
+    // mode 1: just solid color
+    // mode 2: rainbow spread across the longest segment
+    // mode 3: use the bgSeg gradient
+    // mode 4: use the non segmented BgGradient
+    // mode 5: rainbow spread across all segments
+//bgPrefill (true/false) will set if the bg should prefill with the bg color, or be filled as the sparks move
+void PixelStrip::sparkSegSet(SegmentSet segmentSet, byte sparkChance, byte maxSparks, uint32_t pallet[], uint8_t palletLength, byte colorMode, uint32_t BgColor, byte BgColorMode, boolean bgPrefill, boolean direction, int numCycles, int wait) {
 
     byte numSegs = segmentSet.numSegs;
 
@@ -4090,10 +4096,12 @@ void PixelStrip::sparkSegSet(SegmentSet segmentSet, byte sparkChance, byte maxSp
     }
 
     uint16_t maxSegLength = segmentSet.maxSegLength;
-
-    // fill the segments with the BgColor
-    for (int i = 0; i < maxSegLength; i++) {
-        drawSegLineSimple(segmentSet, i, BgColor, BgColorMode);
+    
+    if(bgPrefill){
+        // fill the segments with the BgColor
+        for (int i = 0; i < maxSegLength; i++) {
+            drawSegLineSimple(segmentSet, i, BgColor, BgColorMode);
+        }
     }
 
     // array of spark locations, formulated into maxSpark rows with maxSegLength columbs
@@ -4500,7 +4508,9 @@ void PixelStrip::colorWipeSections(SegmentSet segmentSet, byte colorPattern[], u
 // 3: rainbow mode 1, the rainbow will be evenly distributed across all segements together
 // 4: rainbow mode 2, the rainbow will be distributed across each segment individually
 // 5: rainbow mode 3, rainbow is distrubuted across segements as groups
-void PixelStrip::colorWipeRainbowSec(SegmentSet segmentSet, uint8_t wait, boolean forward, boolean alternate, boolean inToOut, byte style) { colorWipePalletSeg(segmentSet, style, false, 0, 0, 0, -1, wait, forward, alternate); }
+void PixelStrip::colorWipeRainbowSec(SegmentSet segmentSet, uint8_t wait, boolean forward, boolean alternate, boolean inToOut, byte style) { 
+    colorWipePalletSeg(segmentSet, style, false, 0, 0, 0, -1, wait, forward, alternate); 
+    }
 
 // colorwipes in the radial direction according to a color pattern
 //(this function can be called from other segmented color wipe functions, except rainbow, by passing -2 as the wipe length)
