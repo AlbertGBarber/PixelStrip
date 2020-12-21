@@ -209,7 +209,9 @@ void PixelStrip::shiftGradient(uint16_t numCycles, int wait) {
 // Special commands:
 //-1 fills with rainbow
 //-2 will fill with a random color
-//-3 wil fill with whatever the BgPallet is set to
+//-3 will fill with whatever the BgPallet is set to
+//-4 should be used with setRainbowOffsetCycle(). It will fill the whole background wth solid color
+//   matching the current rainbow wheel index. The index will change at the frequency used in setRainbowOffsetCycle()
 void PixelStrip::setBackground(int32_t BgColor) {
     if (BgColor == -1) { // not a real color fill with a rainbow
         fillRainbow(false);
@@ -217,6 +219,8 @@ void PixelStrip::setBackground(int32_t BgColor) {
         fillStrip(randColor(), false);
     } else if (BgColor == -3) {
         fillBgGradientRGB();
+    } else if (BgColor == -4) {
+        fillStrip(Wheel(1), false);      
     } else {
         fillStrip(BgColor, false);
     }
@@ -228,6 +232,8 @@ void PixelStrip::setBackground(int32_t BgColor) {
 //-1 fills with rainbow
 //-2 will fill with a random color
 //-3 wil fill with whatever the BgPallet is set to
+//-4 should be used with setRainbowOffsetCycle(). It will act as if the background is one solod color
+//   matching the current rainbow wheel index. The index will change at the frequency used in setRainbowOffsetCycle()
 void PixelStrip::setBackgroundSingle(int16_t ledLocation, int32_t BgColor) {
     uint32_t color;
     if (BgColor == -1) { // not a real color fill with a rainbow
@@ -236,6 +242,8 @@ void PixelStrip::setBackgroundSingle(int16_t ledLocation, int32_t BgColor) {
         color = randColor();
     } else if (BgColor == -3) {
         color = getBgGradientColor(ledLocation);
+    } else if (BgColor == -4) {
+        color = Wheel(1); 
     } else {
         color = BgColor;
     }
@@ -591,7 +599,7 @@ void PixelStrip::twinkle(int32_t BgColor, int32_t preferedColor, uint8_t mode, i
 // can pass in a specific pallet of colors to choose from, otherwise they'll be set randomly
 // passing -1 as BgColor sets it to rainbow
 // passing -3 sets Bg to BgPallet gradient
-// note that there is no "rave mode", passing -2 or less as the BgColor will result in rainbow
+// note that there is no "rave mode" or rainbow Bg cycle, passing -2 or - 4 as the BgColor will result in empty BG
 // modes:
 // 0: turns one pixel on after another and then resets all
 // 1: same a 0, but turns them off one after another
@@ -609,9 +617,9 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
 
     // prevent random color in the setBackground function, this won't work correctly b/c
     // we need to know the BgColor for twinkling
-    if (BgColor == -2) {
+    if (BgColor == -2 || BgColor == -4) {
         BgColor = 0;
-    }
+    } 
 
     // loop until it's time to turn on a pixel at pixelIndex,
     // then increment the pixelIndex
@@ -622,7 +630,7 @@ void PixelStrip::twinkleSet(int32_t BgColor, uint32_t pallet[], uint8_t palletLe
         currentTime = millis();
         if ((currentTime - resetTime) >= resetRate) {
             resetTime = currentTime;
-
+            
             // fills the strip with a background color once per reset cycle
             if (pixelIndex == (numPixels - 1)) {
                 pixelIndex = 0;
@@ -1621,18 +1629,20 @@ void PixelStrip::simpleStreamer(byte pattern[], byte patternLength, uint32_t pal
                 colorIndex = ((nextStreamStart + i) / streamSize) % patternLength;
                 nextColor = pallet[pattern[colorIndex]];
             } else {
-                nextColor = getPixelColor(nextLedOn - dirctMulti * 1);
+                nextColor = getPixelColor(nextLedOn - dirctMulti);
             }
+
+            nextStreamStart += dirctMulti * (streamSize);
 
             // set the next pixel on and turn off the last pixel in the streamer
             setPixelColor(nextLedOn, nextColor);
+ 
             nextLedOff = nextLedOn - dirctMulti * streamerLength;
             // switch the offLed to the BgColor, if spacing is 0 then there is no Bg so we don't
             if (spacing > 0) {
                 setBackgroundSingle(nextLedOff, BgColor);
             }
 
-            nextStreamStart += dirctMulti * (streamSize);
         }
         setBrightness(prevBrightness);
         show();
@@ -1914,6 +1924,10 @@ void PixelStrip::patternSweep(uint16_t pattern[][3], uint8_t patternLength, uint
 
         // if we have 3 trails or more, we are in streamer mode, so we don't touch the previous leds
         if (trails < 3) {
+            //if bg mode is -4, then  we need to set the whole background color each cycle
+            if( BgColor == -4 ){
+                 setBackground(BgColor);
+            }
             // for each led in the pattern, switch the previous led to the BgColor
             for (int j = 0; j < patternLength; j++) {
                 ledLocation = localPattern[j][0];
@@ -2289,6 +2303,12 @@ void PixelStrip::shooter(uint16_t sections[][2], byte numSections, uint32_t pall
     for (int k = 0; k <= numCycles; k++) {
         stopPatternCheck();
         yield();
+ 
+        //if bg mode is -4, then  we need to set the whole background color each cycle
+        if( (BgColor == -4) ){
+           setBackground(BgColor);
+        }
+        
         // for each section check if we can spawn a shooter, if so try to spawn one
         // a shooter can only spawn if the max number of shooters hasn't been reached, and if the shooter isn't active
         // if not, keep drawing the current shooter
@@ -2948,6 +2968,13 @@ void PixelStrip::shooterSeg(SegmentSet segmentSet, uint32_t pallet[], byte palle
         // randomSeed(random(100));
         stopPatternCheck();
         yield();
+
+        //if bg mode is -4, then  we need to set the whole background color each cycle
+        //ignores the bg filler option
+        if( (BgColor == -4) ){
+           setBackground(BgColor);
+        }
+
         // for each section check if we can spawn a shooter, if so try to spawn one
         // a shooter can only spawn if the max number of shooters hasn't been reached, and if the shooter isn't active
         // if not, keep drawing the current shooter
@@ -4276,7 +4303,7 @@ void PixelStrip::colorWipeRainbowSeg(SegmentSet segmentSet, uint8_t wait, uint8_
 // advanced color wiping function
 // Fills in all segments at the same time, according to the longest segment (like colorSpin)
 // takes a LEDPattern[][2] with structure:  { {startPoint, direction} , {startPoint, direction}, etc }
-// a colorPattenr[] with structure: {pallet index, pallet index, etc}
+// a colorPattern[] with structure: {pallet index, pallet index, etc}
 // a pallet, and the wipe length
 // passing 0 as wipelength will do a wipe with wipelength equla to the maximum segment length ( a shorthand for wiping all the segments at once)
 // and wipes the leds from the startPoints, in a direction for the wipe length
